@@ -148,5 +148,17 @@
                 </button>
             </div>
         </form>
+        <?php if (!empty($appDebug)): ?>
+            <hr style="margin: 1.25rem 0;">
+            <form method="POST" action="/profile/send-digest-test" onsubmit="return confirm('Envoyer un email de test maintenant ?')">
+                <?= csrf_field() ?>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <button type="submit" class="btn btn-sm" style="background:var(--warning);color:var(--dark);border-color:var(--warning);">
+                        <i class="bi bi-bug"></i> [DEBUG] Forcer l'envoi du récapitulatif
+                    </button>
+                    <span class="form-hint">Envoie immédiatement l'email à votre adresse.</span>
+                </div>
+            </form>
+        <?php endif; ?>
     </div>
 </div>

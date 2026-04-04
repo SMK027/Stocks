@@ -69,6 +69,7 @@ $router->get('/dashboard', DashboardController::class, 'index');
 $router->get('/profile', ProfileController::class, 'edit');
 $router->post('/profile', ProfileController::class, 'update');
 $router->post('/profile/password', ProfileController::class, 'updatePassword');
+$router->post('/profile/send-digest-test', ProfileController::class, 'sendDigestTest');
 
 // --- Espaces ---
 $router->get('/spaces', SpaceController::class, 'index');
