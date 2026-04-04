@@ -62,7 +62,7 @@
                                     $roles = ['membre', 'gestionnaire_produits', 'gestionnaire_inventaires', 'gestionnaire_global', 'administrateur'];
                                     foreach ($roles as $r):
                                     ?>
-                                        <option value="<?= $r ?>" <?= $member['role'] === $r ? 'selected' : '' ?>><?= e($r) ?></option>
+                                        <option value="<?= $r ?>" <?= $member['role'] === $r ? 'selected' : '' ?>><?= e(space_role_label($r)) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                                 <button type="submit" class="btn btn-sm btn-outline" title="Modifier le rôle"><i class="bi bi-check-lg"></i></button>

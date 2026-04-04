@@ -49,6 +49,21 @@ function get_client_ip(): string
 }
 
 /**
+ * Retourne le libellé lisible d'un rôle d'espace.
+ */
+function space_role_label(string $role): string
+{
+    return match ($role) {
+        'membre'                   => 'Membre',
+        'gestionnaire_produits'    => 'Gestionnaire produits',
+        'gestionnaire_inventaires' => 'Gestionnaire inventaires',
+        'gestionnaire_global'      => 'Gestionnaire global',
+        'administrateur'           => 'Administrateur',
+        default                    => $role,
+    };
+}
+
+/**
  * Génère un champ CSRF pour les formulaires.
  */
 function csrf_field(): string

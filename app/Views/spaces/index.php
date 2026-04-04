@@ -22,7 +22,7 @@
                         <?php if ($s['description']): ?>
                             <p class="text-muted text-small"><?= e($s['description']) ?></p>
                         <?php endif; ?>
-                        <span class="badge badge-primary"><?= e($s['role']) ?></span>
+                        <span class="badge badge-primary"><?= e(space_role_label($s['role'])) ?></span>
                     </div>
                 </div>
             </a>

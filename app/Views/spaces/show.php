@@ -10,7 +10,7 @@ $isAdmin = $role === 'administrateur';
         <?php if ($space['description']): ?>
             <p class="page-description"><?= e($space['description']) ?></p>
         <?php endif; ?>
-        <span class="badge badge-primary mt-1"><?= e($role) ?></span>
+        <span class="badge badge-primary mt-1"><?= e(space_role_label($role)) ?></span>
     </div>
     <div class="btn-group">
         <a href="/spaces" class="btn btn-outline btn-sm"><i class="bi bi-arrow-left"></i> Retour</a>
