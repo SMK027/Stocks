@@ -1,9 +1,9 @@
 services:
   app:
     build: .
-    container_name: app_web
+    container_name: stocks_web
     ports:
-      - "8089:80"
+      - "8092:80"
     volumes:
       - .:/var/www/html
       - ./data/uploads:/var/www/html/public/uploads
@@ -25,10 +25,10 @@ services:
       - MAIL_FROM_NAME=${MAIL_FROM_NAME}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.app.rule=Host(`app.example.com`)"
-      - "traefik.http.routers.app.entrypoints=websecure"
-      - "traefik.http.routers.app.tls.certresolver=le"
-      - "traefik.http.services.app.loadbalancer.server.port=80"
+      - "traefik.http.routers.stocks.rule=Host(`stocks.leofranz.fr`)"
+      - "traefik.http.routers.stocks.entrypoints=websecure"
+      - "traefik.http.routers.stocks.tls.certresolver=le"
+      - "traefik.http.services.stocks.loadbalancer.server.port=80"
       - "traefik.docker.network=proxy"
     networks:
       - proxy
