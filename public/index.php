@@ -17,6 +17,11 @@ use App\Core\Router;
 use App\Core\Session;
 use App\Controllers\HomeController;
 use App\Controllers\AuthController;
+use App\Controllers\SpaceController;
+use App\Controllers\CategoryController;
+use App\Controllers\LocationController;
+use App\Controllers\ProductController;
+use App\Controllers\InventoryController;
 
 // Démarrer la session
 Session::start();
@@ -40,7 +45,6 @@ $router = new Router();
 
 // --- Routes publiques ---
 $router->get('/', HomeController::class, 'index');
-$router->get('/legal', HomeController::class, 'legal');
 
 // --- Routes d'authentification ---
 $router->get('/login', AuthController::class, 'loginForm');
@@ -49,19 +53,53 @@ $router->get('/register', AuthController::class, 'registerForm');
 $router->post('/register', AuthController::class, 'register');
 $router->get('/logout', AuthController::class, 'logout');
 
-// ============================================================
-// Ajoutez vos routes ici
-// ============================================================
-// $router->get('/dashboard', DashboardController::class, 'index');
-// $router->get('/items', ItemController::class, 'index');
-// $router->get('/items/{id}', ItemController::class, 'show');
-// $router->post('/items/create', ItemController::class, 'create');
-// $router->post('/items/{id}/edit', ItemController::class, 'update');
-// $router->post('/items/{id}/delete', ItemController::class, 'delete');
+// --- Espaces ---
+$router->get('/spaces', SpaceController::class, 'index');
+$router->get('/spaces/create', SpaceController::class, 'createForm');
+$router->post('/spaces/create', SpaceController::class, 'store');
+$router->get('/spaces/{id}', SpaceController::class, 'show');
+$router->get('/spaces/{id}/edit', SpaceController::class, 'editForm');
+$router->post('/spaces/{id}/edit', SpaceController::class, 'update');
+$router->post('/spaces/{id}/delete', SpaceController::class, 'destroy');
 
-// --- Routes API (exemple) ---
-// $router->post('/api/login', AuthApiController::class, 'login');
-// $router->get('/api/items', ItemApiController::class, 'index');
+// --- Membres d'un espace ---
+$router->get('/spaces/{id}/members', SpaceController::class, 'members');
+$router->post('/spaces/{id}/members/add', SpaceController::class, 'addMember');
+$router->post('/spaces/{id}/members/{userId}/update', SpaceController::class, 'updateMember');
+$router->post('/spaces/{id}/members/{userId}/remove', SpaceController::class, 'removeMember');
+
+// --- Catégories ---
+$router->get('/spaces/{spaceId}/categories', CategoryController::class, 'index');
+$router->get('/spaces/{spaceId}/categories/create', CategoryController::class, 'createForm');
+$router->post('/spaces/{spaceId}/categories/create', CategoryController::class, 'store');
+$router->get('/spaces/{spaceId}/categories/{id}/edit', CategoryController::class, 'editForm');
+$router->post('/spaces/{spaceId}/categories/{id}/edit', CategoryController::class, 'update');
+$router->post('/spaces/{spaceId}/categories/{id}/delete', CategoryController::class, 'destroy');
+
+// --- Emplacements ---
+$router->get('/spaces/{spaceId}/locations', LocationController::class, 'index');
+$router->get('/spaces/{spaceId}/locations/create', LocationController::class, 'createForm');
+$router->post('/spaces/{spaceId}/locations/create', LocationController::class, 'store');
+$router->get('/spaces/{spaceId}/locations/{id}/edit', LocationController::class, 'editForm');
+$router->post('/spaces/{spaceId}/locations/{id}/edit', LocationController::class, 'update');
+$router->post('/spaces/{spaceId}/locations/{id}/delete', LocationController::class, 'destroy');
+
+// --- Produits ---
+$router->get('/spaces/{spaceId}/products', ProductController::class, 'index');
+$router->get('/spaces/{spaceId}/products/create', ProductController::class, 'createForm');
+$router->post('/spaces/{spaceId}/products/create', ProductController::class, 'store');
+$router->get('/spaces/{spaceId}/products/{id}/edit', ProductController::class, 'editForm');
+$router->post('/spaces/{spaceId}/products/{id}/edit', ProductController::class, 'update');
+$router->post('/spaces/{spaceId}/products/{id}/delete', ProductController::class, 'destroy');
+$router->get('/spaces/{spaceId}/products/max-consumption', ProductController::class, 'getMaxConsumptionDays');
+
+// --- Inventaire ---
+$router->get('/spaces/{spaceId}/inventory', InventoryController::class, 'index');
+$router->get('/spaces/{spaceId}/inventory/create', InventoryController::class, 'createForm');
+$router->post('/spaces/{spaceId}/inventory/create', InventoryController::class, 'store');
+$router->get('/spaces/{spaceId}/inventory/{id}/edit', InventoryController::class, 'editForm');
+$router->post('/spaces/{spaceId}/inventory/{id}/edit', InventoryController::class, 'update');
+$router->post('/spaces/{spaceId}/inventory/{id}/delete', InventoryController::class, 'destroy');
 
 // Dispatcher la requête
 $router->dispatch();

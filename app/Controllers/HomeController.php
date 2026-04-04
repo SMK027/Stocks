@@ -5,30 +5,22 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Session;
 
-/**
- * Contrôleur de la page d'accueil.
- * Exemple de contrôleur simple à adapter.
- */
 class HomeController extends Controller
 {
     /**
-     * Page d'accueil.
+     * Page d'accueil — redirige vers les espaces si connecté.
      */
     public function index(): void
     {
-        $this->render('home/index', [
-            'title' => 'Accueil',
-        ]);
-    }
+        if (Session::get('user_id')) {
+            $this->redirect('/spaces');
+            return;
+        }
 
-    /**
-     * Page de mentions légales.
-     */
-    public function legal(): void
-    {
-        $this->render('home/legal', [
-            'title' => 'Mentions légales',
+        $this->render('home/index', [
+            'title' => 'Gestion de Stocks',
         ]);
     }
 }
