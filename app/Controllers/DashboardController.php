@@ -45,13 +45,16 @@ class DashboardController extends Controller
 
             $calendarEvents[] = [
                 'title' => $item['product_name'] . ' (×' . $item['quantity'] . ')',
-                'start' => $item['expiry_date'],
+                'start' => $item['stock_date'],
+                'end' => date('Y-m-d', strtotime($item['expiry_date'] . ' +1 day')),
                 'color' => $color,
                 'extendedProps' => [
                     'location' => $item['location_name'],
                     'space' => $item['space_name'],
                     'quantity' => $item['quantity'],
                     'spaceId' => $item['sid'],
+                    'stockDate' => $item['stock_date'],
+                    'expiryDate' => $item['expiry_date'],
                 ],
             ];
         }

@@ -143,7 +143,9 @@ document.addEventListener('DOMContentLoaded', function() {
             info.el.title = info.event.title
                 + '\nEspace : ' + props.space
                 + '\nEmplacement : ' + props.location
-                + '\nQuantité : ' + props.quantity;
+                + '\nQuantité : ' + props.quantity
+                + '\nEn stock depuis : ' + props.stockDate
+                + '\nPéremption : ' + props.expiryDate;
         },
         windowResize: function(view) {
             if (window.innerWidth < 768) {
