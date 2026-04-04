@@ -3,9 +3,9 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: app_web
+    container_name: stocks_web
     ports:
-      - "8080:80"
+      - "8085:80"
     volumes:
       - .:/var/www/html
       - ./data/uploads:/var/www/html/public/uploads
@@ -34,7 +34,7 @@ services:
 
   db:
     image: mariadb:10.11
-    container_name: app_db
+    container_name: stocks_db
     command: --default-time-zone='+01:00'
     environment:
       MYSQL_ROOT_PASSWORD: root_password
@@ -42,7 +42,7 @@ services:
       MYSQL_USER: app_user
       MYSQL_PASSWORD: app_password
     ports:
-      - "3307:3306"
+      - "3308:3306"
     volumes:
       - ./data/mysql:/var/lib/mysql
     healthcheck:
@@ -56,9 +56,9 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: app_phpmyadmin
+    container_name: stocks_phpmyadmin
     ports:
-      - "8081:80"
+      - "8086:80"
     environment:
       PMA_HOST: db
       PMA_USER: app_user
