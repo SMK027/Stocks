@@ -53,6 +53,7 @@ class InventoryItemTest extends TestCase
             product_id INTEGER NOT NULL,
             location_id INTEGER NOT NULL,
             quantity INTEGER NOT NULL DEFAULT 0,
+            is_casse INTEGER NOT NULL DEFAULT 0,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(product_id, location_id)
@@ -141,5 +142,55 @@ class InventoryItemTest extends TestCase
 
         $item = $this->model->find($id);
         $this->assertSame('20', (string)$item['quantity']);
+    }
+
+    public function testMarkAsCasse(): void
+    {
+        $id = $this->model->create(['space_id' => 1, 'product_id' => 1, 'location_id' => 1, 'quantity' => 5]);
+        $this->model->markAsCasse($id);
+
+        $item = $this->model->find($id);
+        $this->assertSame('1', (string)$item['is_casse']);
+    }
+
+    public function testUnmarkCasse(): void
+    {
+        $id = $this->model->create(['space_id' => 1, 'product_id' => 1, 'location_id' => 1, 'quantity' => 5]);
+        $this->model->markAsCasse($id);
+        $this->model->unmarkCasse($id);
+
+        $item = $this->model->find($id);
+        $this->assertSame('0', (string)$item['is_casse']);
+    }
+
+    public function testFindBySpaceExcludesCasse(): void
+    {
+        $this->model->create(['space_id' => 1, 'product_id' => 1, 'location_id' => 1, 'quantity' => 5]);
+        $id2 = $this->model->create(['space_id' => 1, 'product_id' => 2, 'location_id' => 2, 'quantity' => 3]);
+        $this->model->markAsCasse($id2);
+
+        $items = $this->model->findBySpace(1);
+        $this->assertCount(1, $items);
+        $this->assertSame('Lait', $items[0]['product_name']);
+    }
+
+    public function testFindCasseBySpace(): void
+    {
+        $this->model->create(['space_id' => 1, 'product_id' => 1, 'location_id' => 1, 'quantity' => 5]);
+        $id2 = $this->model->create(['space_id' => 1, 'product_id' => 2, 'location_id' => 2, 'quantity' => 3]);
+        $this->model->markAsCasse($id2);
+
+        $casseItems = $this->model->findCasseBySpace(1);
+        $this->assertCount(1, $casseItems);
+        $this->assertSame('Eau', $casseItems[0]['product_name']);
+    }
+
+    public function testFindByLocationExcludesCasse(): void
+    {
+        $id = $this->model->create(['space_id' => 1, 'product_id' => 1, 'location_id' => 1, 'quantity' => 5]);
+        $this->model->markAsCasse($id);
+
+        $items = $this->model->findByLocation(1, 1);
+        $this->assertCount(0, $items);
     }
 }

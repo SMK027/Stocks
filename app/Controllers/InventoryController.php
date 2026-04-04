@@ -63,6 +63,7 @@ class InventoryController extends Controller
         $locations = $this->locationModel->findBySpace($sid);
         $expiringSoon = $this->inventoryModel->findExpiringSoon($sid);
         $expired = $this->inventoryModel->findExpired($sid);
+        $casseItems = $this->inventoryModel->findCasseBySpace($sid);
 
         $this->render('inventory/index', [
             'title' => 'Inventaire — ' . $space['name'],
@@ -71,6 +72,7 @@ class InventoryController extends Controller
             'locations' => $locations,
             'expiringSoon' => $expiringSoon,
             'expired' => $expired,
+            'casseItems' => $casseItems,
             'role' => $role,
         ]);
     }
@@ -193,6 +195,48 @@ class InventoryController extends Controller
 
         $this->inventoryModel->delete((int)$id);
         $this->setFlash('success', 'Entrée supprimée.');
+        $this->redirect('/spaces/' . $sid . '/inventory');
+    }
+
+    /**
+     * Mettre un élément en casse.
+     */
+    public function casse(string $spaceId, string $id): void
+    {
+        $sid = (int)$spaceId;
+        $this->requireInventoryManagement($sid);
+        $this->validateCSRF();
+
+        $item = $this->inventoryModel->find((int)$id);
+        if (!$item || (int)$item['space_id'] !== $sid) {
+            $this->setFlash('danger', 'Entrée introuvable.');
+            $this->redirect('/spaces/' . $sid . '/inventory');
+            return;
+        }
+
+        $this->inventoryModel->markAsCasse((int)$id);
+        $this->setFlash('success', 'Produit mis en casse.');
+        $this->redirect('/spaces/' . $sid . '/inventory');
+    }
+
+    /**
+     * Retirer un élément de la casse.
+     */
+    public function uncasse(string $spaceId, string $id): void
+    {
+        $sid = (int)$spaceId;
+        $this->requireInventoryManagement($sid);
+        $this->validateCSRF();
+
+        $item = $this->inventoryModel->find((int)$id);
+        if (!$item || (int)$item['space_id'] !== $sid) {
+            $this->setFlash('danger', 'Entrée introuvable.');
+            $this->redirect('/spaces/' . $sid . '/inventory');
+            return;
+        }
+
+        $this->inventoryModel->unmarkCasse((int)$id);
+        $this->setFlash('success', 'Produit remis en service.');
         $this->redirect('/spaces/' . $sid . '/inventory');
     }
 }

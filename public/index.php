@@ -110,6 +110,8 @@ $router->post('/spaces/{spaceId}/inventory/create', InventoryController::class, 
 $router->get('/spaces/{spaceId}/inventory/{id}/edit', InventoryController::class, 'editForm');
 $router->post('/spaces/{spaceId}/inventory/{id}/edit', InventoryController::class, 'update');
 $router->post('/spaces/{spaceId}/inventory/{id}/delete', InventoryController::class, 'destroy');
+$router->post('/spaces/{spaceId}/inventory/{id}/casse', InventoryController::class, 'casse');
+$router->post('/spaces/{spaceId}/inventory/{id}/uncasse', InventoryController::class, 'uncasse');
 
 // Dispatcher la requête
 $router->dispatch();

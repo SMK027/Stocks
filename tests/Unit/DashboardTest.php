@@ -61,6 +61,7 @@ class DashboardTest extends TestCase
             product_id INTEGER NOT NULL,
             location_id INTEGER NOT NULL,
             quantity INTEGER NOT NULL DEFAULT 0,
+            is_casse INTEGER NOT NULL DEFAULT 0,
             UNIQUE(product_id, location_id)
         )');
 

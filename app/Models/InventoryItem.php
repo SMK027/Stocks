@@ -28,7 +28,7 @@ class InventoryItem extends Model
              INNER JOIN locations l ON l.id = ii.location_id
              LEFT JOIN product_categories pc ON pc.product_id = p.id
              LEFT JOIN categories c ON c.id = pc.category_id
-             WHERE ii.space_id = :space_id
+             WHERE ii.space_id = :space_id AND ii.is_casse = 0
              GROUP BY ii.id
              ORDER BY p.name ASC, l.name ASC"
         );
@@ -70,7 +70,7 @@ class InventoryItem extends Model
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
              INNER JOIN locations l ON l.id = ii.location_id
-             WHERE ii.space_id = :space_id AND ii.location_id = :location_id
+             WHERE ii.space_id = :space_id AND ii.location_id = :location_id AND ii.is_casse = 0
              ORDER BY p.name ASC"
         );
         $stmt->execute(['space_id' => $spaceId, 'location_id' => $locationId]);
@@ -88,7 +88,7 @@ class InventoryItem extends Model
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
              INNER JOIN locations l ON l.id = ii.location_id
-             WHERE ii.space_id = :space_id
+             WHERE ii.space_id = :space_id AND ii.is_casse = 0
                AND p.expiry_date IS NOT NULL
                AND p.expiry_date <= DATE_ADD(CURDATE(), INTERVAL :days DAY)
                AND p.expiry_date >= CURDATE()
@@ -109,7 +109,7 @@ class InventoryItem extends Model
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
              INNER JOIN locations l ON l.id = ii.location_id
-             WHERE ii.space_id = :space_id
+             WHERE ii.space_id = :space_id AND ii.is_casse = 0
                AND p.expiry_date IS NOT NULL
                AND p.expiry_date < CURDATE()
              ORDER BY p.expiry_date ASC"
@@ -136,7 +136,8 @@ class InventoryItem extends Model
              INNER JOIN locations l ON l.id = ii.location_id
              INNER JOIN spaces s ON s.id = ii.space_id
              INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
-             WHERE p.expiry_date IS NOT NULL
+             WHERE ii.is_casse = 0
+               AND p.expiry_date IS NOT NULL
                AND p.expiry_date <= {$dateAdd}
                AND p.expiry_date >= {$curdate}
              ORDER BY p.expiry_date ASC"
@@ -160,7 +161,8 @@ class InventoryItem extends Model
              INNER JOIN locations l ON l.id = ii.location_id
              INNER JOIN spaces s ON s.id = ii.space_id
              INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
-             WHERE p.expiry_date IS NOT NULL
+             WHERE ii.is_casse = 0
+               AND p.expiry_date IS NOT NULL
                AND p.expiry_date < {$curdate}
              ORDER BY p.expiry_date ASC"
         );
@@ -182,10 +184,53 @@ class InventoryItem extends Model
              INNER JOIN locations l ON l.id = ii.location_id
              INNER JOIN spaces s ON s.id = ii.space_id
              INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
-             WHERE p.expiry_date IS NOT NULL
+             WHERE ii.is_casse = 0
+               AND p.expiry_date IS NOT NULL
              ORDER BY p.expiry_date ASC"
         );
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Retourne les éléments marqués en casse pour un espace.
+     */
+    public function findCasseBySpace(int $spaceId): array
+    {
+        $groupConcat = $this->isSQLite()
+            ? "GROUP_CONCAT(c.name, ', ')"
+            : "GROUP_CONCAT(c.name SEPARATOR ', ')";
+
+        $stmt = $this->db->prepare(
+            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+                    l.name as location_name,
+                    {$groupConcat} as category_names
+             FROM inventory_items ii
+             INNER JOIN products p ON p.id = ii.product_id
+             INNER JOIN locations l ON l.id = ii.location_id
+             LEFT JOIN product_categories pc ON pc.product_id = p.id
+             LEFT JOIN categories c ON c.id = pc.category_id
+             WHERE ii.space_id = :space_id AND ii.is_casse = 1
+             GROUP BY ii.id
+             ORDER BY p.name ASC, l.name ASC"
+        );
+        $stmt->execute(['space_id' => $spaceId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Marque un élément comme étant en casse.
+     */
+    public function markAsCasse(int $id): void
+    {
+        $this->update($id, ['is_casse' => 1]);
+    }
+
+    /**
+     * Retire un élément de la casse (le remet en service).
+     */
+    public function unmarkCasse(int $id): void
+    {
+        $this->update($id, ['is_casse' => 0]);
     }
 }

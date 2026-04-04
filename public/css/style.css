@@ -400,6 +400,32 @@ p { margin-bottom: 1rem; }
     color: var(--white);
 }
 
+.btn-outline-warning {
+    background: transparent;
+    color: var(--warning);
+    border-color: var(--warning);
+}
+
+.btn-outline-warning:hover {
+    background: var(--warning);
+    color: var(--dark);
+}
+
+.btn-outline-success {
+    background: transparent;
+    color: var(--success);
+    border-color: var(--success);
+}
+
+.btn-outline-success:hover {
+    background: var(--success);
+    color: var(--white);
+}
+
+.hidden {
+    display: none !important;
+}
+
 .btn-sm {
     padding: 0.375rem 0.75rem;
     font-size: 0.8rem;

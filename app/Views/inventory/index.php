@@ -94,6 +94,10 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
                                 <td class="text-right">
                                     <div class="btn-group">
                                         <a href="/spaces/<?= (int)$space['id'] ?>/inventory/<?= (int)$item['id'] ?>/edit" class="btn btn-sm btn-outline"><i class="bi bi-pencil"></i></a>
+                                        <form method="POST" action="/spaces/<?= (int)$space['id'] ?>/inventory/<?= (int)$item['id'] ?>/casse" onsubmit="return confirm('Mettre ce produit en casse ?')">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" title="Mettre en casse"><i class="bi bi-x-circle"></i></button>
+                                        </form>
                                         <form method="POST" action="/spaces/<?= (int)$space['id'] ?>/inventory/<?= (int)$item['id'] ?>/delete" onsubmit="return confirm('Supprimer cette entrée ?')">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
@@ -105,6 +109,63 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
                     <?php endforeach; ?>
                 </tbody>
             </table>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($casseItems)): ?>
+    <div class="card" style="margin-top: 2rem;">
+        <div class="card-header" style="cursor: pointer;" onclick="document.getElementById('casse-section').classList.toggle('hidden')">
+            <h3 style="margin: 0; font-size: 1.1rem;">
+                <i class="bi bi-x-circle"></i> Produits en casse
+                <span class="badge badge-secondary"><?= count($casseItems) ?></span>
+                <i class="bi bi-chevron-down" style="float: right; margin-top: 2px;"></i>
+            </h3>
+        </div>
+        <div id="casse-section" class="hidden">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Produit</th>
+                            <th>Emplacement</th>
+                            <th>Quantité</th>
+                            <th>Date de stock</th>
+                            <th>Date limite</th>
+                            <?php if ($canManage): ?>
+                                <th class="text-right">Actions</th>
+                            <?php endif; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($casseItems as $cItem): ?>
+                            <tr>
+                                <td><strong><?= e($cItem['product_name']) ?></strong></td>
+                                <td><span class="badge badge-info"><?= e($cItem['location_name']) ?></span></td>
+                                <td><strong><?= (int)$cItem['quantity'] ?></strong></td>
+                                <td class="text-small"><?= e(date('d/m/Y', strtotime($cItem['stock_date']))) ?></td>
+                                <td class="text-small">
+                                    <?= $cItem['expiry_date'] ? e(date('d/m/Y', strtotime($cItem['expiry_date']))) : '—' ?>
+                                </td>
+                                <?php if ($canManage): ?>
+                                    <td class="text-right">
+                                        <div class="btn-group">
+                                            <form method="POST" action="/spaces/<?= (int)$space['id'] ?>/inventory/<?= (int)$cItem['id'] ?>/uncasse" onsubmit="return confirm('Remettre ce produit en service ?')">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Remettre en service"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                            </form>
+                                            <form method="POST" action="/spaces/<?= (int)$space['id'] ?>/inventory/<?= (int)$cItem['id'] ?>/delete" onsubmit="return confirm('Supprimer définitivement ?')">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                <?php endif; ?>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 <?php endif; ?>
