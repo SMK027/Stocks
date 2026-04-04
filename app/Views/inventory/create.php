@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.min.css">
 <div class="auth-container" style="max-width:520px;">
     <div class="card">
         <div class="card-body">
@@ -18,7 +19,7 @@
                     <?= csrf_field() ?>
                     <div class="form-group">
                         <label class="form-label" for="product_id">Produit *</label>
-                        <select id="product_id" name="product_id" class="form-control" required>
+                        <select id="product_id" name="product_id" required>
                             <option value="">— Sélectionner un produit —</option>
                             <?php foreach ($products as $p): ?>
                                 <option value="<?= (int)$p['id'] ?>"><?= e($p['name']) ?></option>
@@ -27,7 +28,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="location_id">Emplacement *</label>
-                        <select id="location_id" name="location_id" class="form-control" required>
+                        <select id="location_id" name="location_id" required>
                             <option value="">— Sélectionner un emplacement —</option>
                             <?php foreach ($locations as $loc): ?>
                                 <option value="<?= (int)$loc['id'] ?>"><?= e($loc['name']) ?></option>
@@ -47,3 +48,11 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    new TomSelect('#product_id',  { create: false, placeholder: 'Rechercher un produit…' });
+    new TomSelect('#location_id', { create: false, placeholder: 'Rechercher un emplacement…' });
+});
+</script>
