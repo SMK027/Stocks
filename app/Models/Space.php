@@ -74,8 +74,18 @@ class Space extends Model
      */
     public function addMember(int $spaceId, int $userId, string $role = 'membre'): bool
     {
+        // Vérifie si le membre existe déjà
+        $existing = $this->db->prepare(
+            "SELECT id FROM space_members WHERE space_id = :space_id AND user_id = :user_id"
+        );
+        $existing->execute(['space_id' => $spaceId, 'user_id' => $userId]);
+
+        if ($existing->fetch()) {
+            return false;
+        }
+
         $stmt = $this->db->prepare(
-            "INSERT IGNORE INTO space_members (space_id, user_id, role) VALUES (:space_id, :user_id, :role)"
+            "INSERT INTO space_members (space_id, user_id, role) VALUES (:space_id, :user_id, :role)"
         );
         return $stmt->execute(['space_id' => $spaceId, 'user_id' => $userId, 'role' => $role]);
     }

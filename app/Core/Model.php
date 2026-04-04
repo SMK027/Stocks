@@ -21,6 +21,14 @@ abstract class Model
     }
 
     /**
+     * Vérifie si le driver PDO est SQLite.
+     */
+    protected function isSQLite(): bool
+    {
+        return $this->db->getAttribute(\PDO::ATTR_DRIVER_NAME) === 'sqlite';
+    }
+
+    /**
      * Trouve un enregistrement par son ID.
      */
     public function find(int $id): ?array

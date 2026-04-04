@@ -15,10 +15,14 @@ class InventoryItem extends Model
      */
     public function findBySpace(int $spaceId): array
     {
+        $groupConcat = $this->isSQLite()
+            ? "GROUP_CONCAT(c.name, ', ')"
+            : "GROUP_CONCAT(c.name SEPARATOR ', ')";
+
         $stmt = $this->db->prepare(
             "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
                     l.name as location_name,
-                    GROUP_CONCAT(c.name SEPARATOR ', ') as category_names
+                    {$groupConcat} as category_names
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
              INNER JOIN locations l ON l.id = ii.location_id

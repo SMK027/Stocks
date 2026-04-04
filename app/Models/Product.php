@@ -15,8 +15,12 @@ class Product extends Model
      */
     public function findBySpace(int $spaceId): array
     {
+        $groupConcat = $this->isSQLite()
+            ? "GROUP_CONCAT(c.name, ', ')"
+            : "GROUP_CONCAT(c.name SEPARATOR ', ')";
+
         $stmt = $this->db->prepare(
-            "SELECT p.*, GROUP_CONCAT(c.name SEPARATOR ', ') as category_names
+            "SELECT p.*, {$groupConcat} as category_names
              FROM products p
              LEFT JOIN product_categories pc ON pc.product_id = p.id
              LEFT JOIN categories c ON c.id = pc.category_id
