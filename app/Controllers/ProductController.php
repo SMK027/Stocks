@@ -91,11 +91,11 @@ class ProductController extends Controller
         $sid = (int)$spaceId;
         $this->requireProductManagement($sid);
         $this->validateCSRF();
-        $data = $this->getPostData(['name', 'stock_date', 'expiry_date']);
+        $data = $this->getPostData(['name']);
         $categoryIds = $_POST['categories'] ?? [];
 
-        if (empty($data['name']) || empty($data['stock_date'])) {
-            $this->setFlash('danger', 'Le nom et la date de mise en stock sont requis.');
+        if (empty($data['name'])) {
+            $this->setFlash('danger', 'Le nom du produit est requis.');
             $this->redirect('/spaces/' . $sid . '/products/create');
             return;
         }
@@ -105,8 +105,6 @@ class ProductController extends Controller
 
         $this->productModel->createInSpace($sid, [
             'name' => $data['name'],
-            'stock_date' => $data['stock_date'],
-            'expiry_date' => $data['expiry_date'] ?: null,
         ], $categoryIds);
 
         $this->setFlash('success', 'Produit créé.');
@@ -146,11 +144,11 @@ class ProductController extends Controller
         $sid = (int)$spaceId;
         $this->requireProductManagement($sid);
         $this->validateCSRF();
-        $data = $this->getPostData(['name', 'stock_date', 'expiry_date']);
+        $data = $this->getPostData(['name']);
         $categoryIds = $_POST['categories'] ?? [];
 
-        if (empty($data['name']) || empty($data['stock_date'])) {
-            $this->setFlash('danger', 'Le nom et la date de mise en stock sont requis.');
+        if (empty($data['name'])) {
+            $this->setFlash('danger', 'Le nom du produit est requis.');
             $this->redirect('/spaces/' . $sid . '/products/' . $id . '/edit');
             return;
         }
@@ -159,8 +157,6 @@ class ProductController extends Controller
 
         $this->productModel->updateWithCategories((int)$id, [
             'name' => $data['name'],
-            'stock_date' => $data['stock_date'],
-            'expiry_date' => $data['expiry_date'] ?: null,
         ], $categoryIds);
 
         $this->setFlash('success', 'Produit mis à jour.');

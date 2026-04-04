@@ -31,9 +31,6 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                     <tr>
                         <th>Nom</th>
                         <th>Catégories</th>
-                        <th>Date de stock</th>
-                        <th>Date limite</th>
-                        <th>Statut</th>
                         <?php if ($canManage): ?>
                             <th class="text-right">Actions</th>
                         <?php endif; ?>
@@ -41,25 +38,6 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                 </thead>
                 <tbody>
                     <?php foreach ($products as $p): ?>
-                        <?php
-                        $expiryStatus = '';
-                        $expiryBadge = '';
-                        if ($p['expiry_date']) {
-                            $today = new DateTime();
-                            $expiry = new DateTime($p['expiry_date']);
-                            $diff = $today->diff($expiry);
-                            if ($expiry < $today) {
-                                $expiryStatus = 'Périmé';
-                                $expiryBadge = 'badge-danger';
-                            } elseif ($diff->days <= 7) {
-                                $expiryStatus = 'Expire bientôt';
-                                $expiryBadge = 'badge-warning';
-                            } else {
-                                $expiryStatus = 'OK';
-                                $expiryBadge = 'badge-success';
-                            }
-                        }
-                        ?>
                         <tr>
                             <td><strong><?= e($p['name']) ?></strong></td>
                             <td>
@@ -71,20 +49,6 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                                     <span class="text-muted">—</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?= e(date('d/m/Y', strtotime($p['stock_date']))) ?></td>
-                            <td>
-                                <?php if ($p['expiry_date']): ?>
-                                    <?= e(date('d/m/Y', strtotime($p['expiry_date']))) ?>
-                                <?php else: ?>
-                                    <span class="text-muted">—</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <?php if ($expiryBadge): ?>
-                                    <span class="badge <?= $expiryBadge ?>"><?= e($expiryStatus) ?></span>
-                                <?php else: ?>
-                                    <span class="text-muted">—</span>
-                                <?php endif; ?>
                             </td>
                             <?php if ($canManage): ?>
                                 <td class="text-right">

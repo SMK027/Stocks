@@ -53,31 +53,31 @@ foreach ($users as $u) {
 
     // Produits périmés (tous les espaces de l'utilisateur)
     $expired = $pdo->prepare(
-        "SELECT p.name as product_name, p.expiry_date, l.name as location_name, s.name as space_name, ii.quantity
+        "SELECT p.name as product_name, ii.expiry_date, l.name as location_name, s.name as space_name, ii.quantity
          FROM inventory_items ii
          INNER JOIN products p ON p.id = ii.product_id
          INNER JOIN locations l ON l.id = ii.location_id
          INNER JOIN spaces s ON s.id = ii.space_id
          INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :uid
-         WHERE ii.is_casse = 0 AND p.expiry_date IS NOT NULL AND p.expiry_date < CURDATE()
-         ORDER BY p.expiry_date ASC"
+         WHERE ii.is_casse = 0 AND ii.expiry_date IS NOT NULL AND ii.expiry_date < CURDATE()
+         ORDER BY ii.expiry_date ASC"
     );
     $expired->execute(['uid' => $userId]);
     $expiredItems = $expired->fetchAll();
 
     // Produits expirant dans les 7 prochains jours
     $soon = $pdo->prepare(
-        "SELECT p.name as product_name, p.expiry_date, l.name as location_name, s.name as space_name, ii.quantity
+        "SELECT p.name as product_name, ii.expiry_date, l.name as location_name, s.name as space_name, ii.quantity
          FROM inventory_items ii
          INNER JOIN products p ON p.id = ii.product_id
          INNER JOIN locations l ON l.id = ii.location_id
          INNER JOIN spaces s ON s.id = ii.space_id
          INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :uid
          WHERE ii.is_casse = 0
-           AND p.expiry_date IS NOT NULL
-           AND p.expiry_date >= CURDATE()
-           AND p.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-         ORDER BY p.expiry_date ASC"
+           AND ii.expiry_date IS NOT NULL
+           AND ii.expiry_date >= CURDATE()
+           AND ii.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+         ORDER BY ii.expiry_date ASC"
     );
     $soon->execute(['uid' => $userId]);
     $soonItems = $soon->fetchAll();

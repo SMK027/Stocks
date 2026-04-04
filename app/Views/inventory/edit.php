@@ -26,6 +26,16 @@
                     <label class="form-label" for="quantity">Quantité *</label>
                     <input type="number" id="quantity" name="quantity" class="form-control" required min="0" value="<?= (int)$item['quantity'] ?>">
                 </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="stock_date">Date de mise en stock *</label>
+                        <input type="date" id="stock_date" name="stock_date" class="form-control" required value="<?= e($item['stock_date'] ?? date('Y-m-d')) ?>">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="expiry_date">Date limite de consommation</label>
+                        <input type="date" id="expiry_date" name="expiry_date" class="form-control" value="<?= e($item['expiry_date'] ?? '') ?>">
+                    </div>
+                </div>
                 <div class="btn-group">
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
                     <a href="/spaces/<?= (int)$space['id'] ?>/inventory" class="btn btn-outline">Annuler</a>

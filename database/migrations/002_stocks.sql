@@ -51,8 +51,6 @@ CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     space_id INT NOT NULL,
     name VARCHAR(150) NOT NULL,
-    stock_date DATE NOT NULL COMMENT 'Date de mise en stock',
-    expiry_date DATE DEFAULT NULL COMMENT 'Date limite de consommation',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (space_id) REFERENCES spaces(id) ON DELETE CASCADE
@@ -67,13 +65,15 @@ CREATE TABLE IF NOT EXISTS product_categories (
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Inventaire : produit + emplacement + quantité
+-- Inventaire : produit + emplacement + quantité + dates de stock
 CREATE TABLE IF NOT EXISTS inventory_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     space_id INT NOT NULL,
     product_id INT NOT NULL,
     location_id INT NOT NULL,
     quantity INT NOT NULL DEFAULT 0,
+    stock_date DATE DEFAULT NULL COMMENT 'Date de mise en stock',
+    expiry_date DATE DEFAULT NULL COMMENT 'Date limite de consommation',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_product_location (product_id, location_id),

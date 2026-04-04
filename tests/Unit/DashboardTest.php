@@ -44,9 +44,7 @@ class DashboardTest extends TestCase
         $this->pdo->exec('CREATE TABLE products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             space_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            stock_date TEXT NOT NULL,
-            expiry_date TEXT
+            name TEXT NOT NULL
         )');
 
         $this->pdo->exec('CREATE TABLE locations (
@@ -61,6 +59,8 @@ class DashboardTest extends TestCase
             product_id INTEGER NOT NULL,
             location_id INTEGER NOT NULL,
             quantity INTEGER NOT NULL DEFAULT 0,
+            stock_date TEXT,
+            expiry_date TEXT,
             is_casse INTEGER NOT NULL DEFAULT 0,
             UNIQUE(product_id, location_id)
         )');
@@ -76,22 +76,22 @@ class DashboardTest extends TestCase
 
         // Produit expirant dans 3 jours
         $soon = date('Y-m-d', strtotime('+3 days'));
-        $this->pdo->exec("INSERT INTO products (space_id, name, stock_date, expiry_date) VALUES (1, 'Lait', '2024-01-01', '{$soon}')");
-        $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity) VALUES (1, 1, 1, 2)");
+        $this->pdo->exec("INSERT INTO products (space_id, name) VALUES (1, 'Lait')");
+        $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity, stock_date, expiry_date) VALUES (1, 1, 1, 2, '2024-01-01', '{$soon}')");
 
         // Produit périmé
         $past = date('Y-m-d', strtotime('-2 days'));
-        $this->pdo->exec("INSERT INTO products (space_id, name, stock_date, expiry_date) VALUES (2, 'Yaourt', '2024-01-01', '{$past}')");
-        $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity) VALUES (2, 2, 2, 5)");
+        $this->pdo->exec("INSERT INTO products (space_id, name) VALUES (2, 'Yaourt')");
+        $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity, stock_date, expiry_date) VALUES (2, 2, 2, 5, '2024-01-01', '{$past}')");
 
         // Produit sans date d'expiration
-        $this->pdo->exec("INSERT INTO products (space_id, name, stock_date, expiry_date) VALUES (1, 'Eau', '2024-01-01', NULL)");
+        $this->pdo->exec("INSERT INTO products (space_id, name) VALUES (1, 'Eau')");
         $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity) VALUES (1, 3, 1, 10)");
 
         // Produit loin dans le futur
         $future = date('Y-m-d', strtotime('+60 days'));
-        $this->pdo->exec("INSERT INTO products (space_id, name, stock_date, expiry_date) VALUES (1, 'Conserves', '2024-01-01', '{$future}')");
-        $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity) VALUES (1, 4, 1, 3)");
+        $this->pdo->exec("INSERT INTO products (space_id, name) VALUES (1, 'Conserves')");
+        $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity, stock_date, expiry_date) VALUES (1, 4, 1, 3, '2024-01-01', '{$future}')");
 
         $this->model = new InventoryItem($this->pdo);
     }
@@ -140,8 +140,8 @@ class DashboardTest extends TestCase
     {
         // Ajouter un produit expirant bientôt dans le 2ème espace
         $soon = date('Y-m-d', strtotime('+5 days'));
-        $this->pdo->exec("INSERT INTO products (space_id, name, stock_date, expiry_date) VALUES (2, 'Jus', '2024-01-01', '{$soon}')");
-        $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity) VALUES (2, 5, 2, 1)");
+        $this->pdo->exec("INSERT INTO products (space_id, name) VALUES (2, 'Jus')");
+        $this->pdo->exec("INSERT INTO inventory_items (space_id, product_id, location_id, quantity, stock_date, expiry_date) VALUES (2, 5, 2, 1, '2024-01-01', '{$soon}')");
 
         $items = $this->model->findExpiringSoonForUser(1, 14);
         $this->assertCount(2, $items);

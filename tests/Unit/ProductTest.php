@@ -24,8 +24,6 @@ class ProductTest extends TestCase
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             space_id INTEGER NOT NULL,
             name TEXT NOT NULL,
-            stock_date TEXT NOT NULL,
-            expiry_date TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )');
@@ -51,14 +49,11 @@ class ProductTest extends TestCase
     {
         $id = $this->model->createInSpace(1, [
             'name' => 'Lait',
-            'stock_date' => '2024-01-15',
-            'expiry_date' => '2024-01-22',
         ]);
 
         $this->assertGreaterThan(0, $id);
         $product = $this->model->find($id);
         $this->assertSame('Lait', $product['name']);
-        $this->assertSame('2024-01-15', $product['stock_date']);
     }
 
     public function testCreateWithCategories(): void
@@ -68,7 +63,6 @@ class ProductTest extends TestCase
 
         $id = $this->model->createInSpace(1, [
             'name' => 'Yaourt',
-            'stock_date' => '2024-01-15',
         ], [1, 2]);
 
         $categoryIds = $this->model->getCategoryIds($id);
@@ -82,7 +76,6 @@ class ProductTest extends TestCase
         $this->pdo->exec("INSERT INTO categories (space_id, name) VALUES (1, 'Cat A')");
         $id = $this->model->createInSpace(1, [
             'name' => 'Test',
-            'stock_date' => '2024-01-15',
         ], [1]);
 
         $product = $this->model->findWithCategories($id);
@@ -98,7 +91,6 @@ class ProductTest extends TestCase
 
         $id = $this->model->createInSpace(1, [
             'name' => 'Test',
-            'stock_date' => '2024-01-15',
         ], [1]);
 
         $this->model->updateWithCategories($id, ['name' => 'Updated'], [2]);
@@ -118,7 +110,6 @@ class ProductTest extends TestCase
 
         $id = $this->model->createInSpace(1, [
             'name' => 'Test',
-            'stock_date' => '2024-01-15',
         ], [1, 2]);
 
         $this->model->syncCategories($id, []);
@@ -128,9 +119,9 @@ class ProductTest extends TestCase
 
     public function testFindBySpace(): void
     {
-        $this->model->createInSpace(1, ['name' => 'A', 'stock_date' => '2024-01-15']);
-        $this->model->createInSpace(1, ['name' => 'B', 'stock_date' => '2024-01-15']);
-        $this->model->createInSpace(2, ['name' => 'C', 'stock_date' => '2024-01-15']);
+        $this->model->createInSpace(1, ['name' => 'A']);
+        $this->model->createInSpace(1, ['name' => 'B']);
+        $this->model->createInSpace(2, ['name' => 'C']);
 
         $products = $this->model->findBySpace(1);
         $this->assertCount(2, $products);
@@ -138,18 +129,8 @@ class ProductTest extends TestCase
 
     public function testDeleteProduct(): void
     {
-        $id = $this->model->createInSpace(1, ['name' => 'Del', 'stock_date' => '2024-01-15']);
+        $id = $this->model->createInSpace(1, ['name' => 'Del']);
         $this->model->delete($id);
         $this->assertNull($this->model->find($id));
-    }
-
-    public function testExpiryDateCanBeNull(): void
-    {
-        $id = $this->model->createInSpace(1, [
-            'name' => 'NoExpiry',
-            'stock_date' => '2024-01-15',
-        ]);
-        $product = $this->model->find($id);
-        $this->assertNull($product['expiry_date']);
     }
 }

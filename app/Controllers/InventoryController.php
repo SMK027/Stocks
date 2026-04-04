@@ -9,6 +9,7 @@ use App\Models\Space;
 use App\Models\InventoryItem;
 use App\Models\Product;
 use App\Models\Location;
+use App\Models\Category;
 
 class InventoryController extends Controller
 {
@@ -16,6 +17,7 @@ class InventoryController extends Controller
     private InventoryItem $inventoryModel;
     private Product $productModel;
     private Location $locationModel;
+    private Category $categoryModel;
 
     public function __construct()
     {
@@ -23,6 +25,7 @@ class InventoryController extends Controller
         $this->inventoryModel = new InventoryItem();
         $this->productModel = new Product();
         $this->locationModel = new Location();
+        $this->categoryModel = new Category();
     }
 
     private function requireInventoryAccess(int $spaceId): string
@@ -87,12 +90,21 @@ class InventoryController extends Controller
         $space = $this->spaceModel->find($sid);
         $products = $this->productModel->findBySpace($sid);
         $locations = $this->locationModel->findBySpace($sid);
+        $categories = $this->categoryModel->findBySpace($sid);
+
+        // Mapping produit -> [category_ids] pour la suggestion automatique de date
+        $productCategories = [];
+        foreach ($products as $p) {
+            $productCategories[(int)$p['id']] = $this->productModel->getCategoryIds((int)$p['id']);
+        }
 
         $this->render('inventory/create', [
             'title' => 'Ajouter à l\'inventaire',
             'space' => $space,
             'products' => $products,
             'locations' => $locations,
+            'categories' => $categories,
+            'productCategories' => $productCategories,
         ]);
     }
 
@@ -104,10 +116,10 @@ class InventoryController extends Controller
         $sid = (int)$spaceId;
         $this->requireInventoryManagement($sid);
         $this->validateCSRF();
-        $data = $this->getPostData(['product_id', 'location_id', 'quantity']);
+        $data = $this->getPostData(['product_id', 'location_id', 'quantity', 'stock_date', 'expiry_date']);
 
-        if (empty($data['product_id']) || empty($data['location_id']) || $data['quantity'] === '') {
-            $this->setFlash('danger', 'Tous les champs sont requis.');
+        if (empty($data['product_id']) || empty($data['location_id']) || $data['quantity'] === '' || empty($data['stock_date'])) {
+            $this->setFlash('danger', 'Le produit, l\'emplacement, la quantité et la date de mise en stock sont requis.');
             $this->redirect('/spaces/' . $sid . '/inventory/create');
             return;
         }
@@ -119,7 +131,7 @@ class InventoryController extends Controller
             return;
         }
 
-        $this->inventoryModel->upsert($sid, (int)$data['product_id'], (int)$data['location_id'], $quantity);
+        $this->inventoryModel->upsert($sid, (int)$data['product_id'], (int)$data['location_id'], $quantity, $data['stock_date'], $data['expiry_date'] ?: null);
         $this->setFlash('success', 'Inventaire mis à jour.');
         $this->redirect('/spaces/' . $sid . '/inventory');
     }
@@ -160,10 +172,10 @@ class InventoryController extends Controller
         $sid = (int)$spaceId;
         $this->requireInventoryManagement($sid);
         $this->validateCSRF();
-        $data = $this->getPostData(['product_id', 'location_id', 'quantity']);
+        $data = $this->getPostData(['product_id', 'location_id', 'quantity', 'stock_date', 'expiry_date']);
 
-        if (empty($data['product_id']) || empty($data['location_id']) || $data['quantity'] === '') {
-            $this->setFlash('danger', 'Tous les champs sont requis.');
+        if (empty($data['product_id']) || empty($data['location_id']) || $data['quantity'] === '' || empty($data['stock_date'])) {
+            $this->setFlash('danger', 'Le produit, l\'emplacement, la quantité et la date de mise en stock sont requis.');
             $this->redirect('/spaces/' . $sid . '/inventory/' . $id . '/edit');
             return;
         }
@@ -176,9 +188,11 @@ class InventoryController extends Controller
         }
 
         $this->inventoryModel->update((int)$id, [
-            'product_id' => (int)$data['product_id'],
+            'product_id'  => (int)$data['product_id'],
             'location_id' => (int)$data['location_id'],
-            'quantity' => $quantity,
+            'quantity'    => $quantity,
+            'stock_date'  => $data['stock_date'] ?: null,
+            'expiry_date' => $data['expiry_date'] ?: null,
         ]);
         $this->setFlash('success', 'Entrée mise à jour.');
         $this->redirect('/spaces/' . $sid . '/inventory');

@@ -23,9 +23,7 @@ class InventoryItemTest extends TestCase
         $this->pdo->exec('CREATE TABLE products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             space_id INTEGER NOT NULL,
-            name TEXT NOT NULL,
-            stock_date TEXT NOT NULL,
-            expiry_date TEXT
+            name TEXT NOT NULL
         )');
 
         $this->pdo->exec('CREATE TABLE locations (
@@ -53,6 +51,8 @@ class InventoryItemTest extends TestCase
             product_id INTEGER NOT NULL,
             location_id INTEGER NOT NULL,
             quantity INTEGER NOT NULL DEFAULT 0,
+            stock_date TEXT,
+            expiry_date TEXT,
             is_casse INTEGER NOT NULL DEFAULT 0,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -60,8 +60,8 @@ class InventoryItemTest extends TestCase
         )');
 
         // Données de test
-        $this->pdo->exec("INSERT INTO products (space_id, name, stock_date, expiry_date) VALUES (1, 'Lait', '2024-01-15', '2024-01-22')");
-        $this->pdo->exec("INSERT INTO products (space_id, name, stock_date, expiry_date) VALUES (1, 'Eau', '2024-01-15', NULL)");
+        $this->pdo->exec("INSERT INTO products (space_id, name) VALUES (1, 'Lait')");
+        $this->pdo->exec("INSERT INTO products (space_id, name) VALUES (1, 'Eau')");
         $this->pdo->exec("INSERT INTO locations (space_id, name) VALUES (1, 'Frigo')");
         $this->pdo->exec("INSERT INTO locations (space_id, name) VALUES (1, 'Placard')");
 

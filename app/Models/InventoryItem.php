@@ -20,7 +20,7 @@ class InventoryItem extends Model
             : "GROUP_CONCAT(c.name SEPARATOR ', ')";
 
         $stmt = $this->db->prepare(
-            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+            "SELECT ii.*, p.name as product_name,
                     l.name as location_name,
                     {$groupConcat} as category_names
              FROM inventory_items ii
@@ -39,7 +39,7 @@ class InventoryItem extends Model
     /**
      * Crée ou met à jour un élément d'inventaire.
      */
-    public function upsert(int $spaceId, int $productId, int $locationId, int $quantity): int
+    public function upsert(int $spaceId, int $productId, int $locationId, int $quantity, ?string $stockDate = null, ?string $expiryDate = null): int
     {
         $existing = $this->findOneBy([
             'product_id' => $productId,
@@ -47,15 +47,21 @@ class InventoryItem extends Model
         ]);
 
         if ($existing) {
-            $this->update($existing['id'], ['quantity' => $quantity]);
+            $this->update($existing['id'], [
+                'quantity'    => $quantity,
+                'stock_date'  => $stockDate,
+                'expiry_date' => $expiryDate,
+            ]);
             return (int)$existing['id'];
         }
 
         return $this->create([
-            'space_id' => $spaceId,
-            'product_id' => $productId,
+            'space_id'    => $spaceId,
+            'product_id'  => $productId,
             'location_id' => $locationId,
-            'quantity' => $quantity,
+            'quantity'    => $quantity,
+            'stock_date'  => $stockDate,
+            'expiry_date' => $expiryDate,
         ]);
     }
 
@@ -65,7 +71,7 @@ class InventoryItem extends Model
     public function findByLocation(int $spaceId, int $locationId): array
     {
         $stmt = $this->db->prepare(
-            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+            "SELECT ii.*, p.name as product_name,
                     l.name as location_name
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
@@ -83,16 +89,16 @@ class InventoryItem extends Model
     public function findExpiringSoon(int $spaceId, int $days = 7): array
     {
         $stmt = $this->db->prepare(
-            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+            "SELECT ii.*, p.name as product_name,
                     l.name as location_name
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
              INNER JOIN locations l ON l.id = ii.location_id
              WHERE ii.space_id = :space_id AND ii.is_casse = 0
-               AND p.expiry_date IS NOT NULL
-               AND p.expiry_date <= DATE_ADD(CURDATE(), INTERVAL :days DAY)
-               AND p.expiry_date >= CURDATE()
-             ORDER BY p.expiry_date ASC"
+               AND ii.expiry_date IS NOT NULL
+               AND ii.expiry_date <= DATE_ADD(CURDATE(), INTERVAL :days DAY)
+               AND ii.expiry_date >= CURDATE()
+             ORDER BY ii.expiry_date ASC"
         );
         $stmt->execute(['space_id' => $spaceId, 'days' => $days]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -104,15 +110,15 @@ class InventoryItem extends Model
     public function findExpired(int $spaceId): array
     {
         $stmt = $this->db->prepare(
-            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+            "SELECT ii.*, p.name as product_name,
                     l.name as location_name
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
              INNER JOIN locations l ON l.id = ii.location_id
              WHERE ii.space_id = :space_id AND ii.is_casse = 0
-               AND p.expiry_date IS NOT NULL
-               AND p.expiry_date < CURDATE()
-             ORDER BY p.expiry_date ASC"
+               AND ii.expiry_date IS NOT NULL
+               AND ii.expiry_date < CURDATE()
+             ORDER BY ii.expiry_date ASC"
         );
         $stmt->execute(['space_id' => $spaceId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -129,7 +135,7 @@ class InventoryItem extends Model
             : 'DATE_ADD(CURDATE(), INTERVAL :days DAY)';
 
         $stmt = $this->db->prepare(
-            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+            "SELECT ii.*, p.name as product_name,
                     l.name as location_name, s.name as space_name, s.id as sid
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
@@ -137,10 +143,10 @@ class InventoryItem extends Model
              INNER JOIN spaces s ON s.id = ii.space_id
              INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
              WHERE ii.is_casse = 0
-               AND p.expiry_date IS NOT NULL
-               AND p.expiry_date <= {$dateAdd}
-               AND p.expiry_date >= {$curdate}
-             ORDER BY p.expiry_date ASC"
+               AND ii.expiry_date IS NOT NULL
+               AND ii.expiry_date <= {$dateAdd}
+               AND ii.expiry_date >= {$curdate}
+             ORDER BY ii.expiry_date ASC"
         );
         $stmt->execute(['user_id' => $userId, 'days' => $days]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -154,7 +160,7 @@ class InventoryItem extends Model
         $curdate = $this->isSQLite() ? "date('now')" : 'CURDATE()';
 
         $stmt = $this->db->prepare(
-            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+            "SELECT ii.*, p.name as product_name,
                     l.name as location_name, s.name as space_name, s.id as sid
              FROM inventory_items ii
              INNER JOIN products p ON p.id = ii.product_id
@@ -162,9 +168,9 @@ class InventoryItem extends Model
              INNER JOIN spaces s ON s.id = ii.space_id
              INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
              WHERE ii.is_casse = 0
-               AND p.expiry_date IS NOT NULL
-               AND p.expiry_date < {$curdate}
-             ORDER BY p.expiry_date ASC"
+               AND ii.expiry_date IS NOT NULL
+               AND ii.expiry_date < {$curdate}
+             ORDER BY ii.expiry_date ASC"
         );
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -176,7 +182,7 @@ class InventoryItem extends Model
     public function findAllWithExpiryForUser(int $userId): array
     {
         $stmt = $this->db->prepare(
-            "SELECT ii.id, p.name as product_name, p.expiry_date, p.stock_date,
+            "SELECT ii.id, p.name as product_name, ii.expiry_date, ii.stock_date,
                     l.name as location_name, s.name as space_name, s.id as sid,
                     ii.quantity
              FROM inventory_items ii
@@ -185,8 +191,8 @@ class InventoryItem extends Model
              INNER JOIN spaces s ON s.id = ii.space_id
              INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
              WHERE ii.is_casse = 0
-               AND p.expiry_date IS NOT NULL
-             ORDER BY p.expiry_date ASC"
+               AND ii.expiry_date IS NOT NULL
+             ORDER BY ii.expiry_date ASC"
         );
         $stmt->execute(['user_id' => $userId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
@@ -202,7 +208,7 @@ class InventoryItem extends Model
             : "GROUP_CONCAT(c.name SEPARATOR ', ')";
 
         $stmt = $this->db->prepare(
-            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+            "SELECT ii.*, p.name as product_name,
                     l.name as location_name,
                     {$groupConcat} as category_names
              FROM inventory_items ii
