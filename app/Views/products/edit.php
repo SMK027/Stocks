@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.min.css">
 <div class="auth-container" style="max-width:520px;">
     <div class="card">
         <div class="card-body">
@@ -15,15 +16,13 @@
                     <?php if (empty($categories)): ?>
                         <p class="text-muted text-small">Aucune catégorie disponible.</p>
                     <?php else: ?>
-                        <div class="checkbox-group">
+                        <select id="category_select" name="categories[]" multiple placeholder="Rechercher une catégorie...">
                             <?php foreach ($categories as $cat): ?>
-                                <div class="form-check">
-                                    <input type="checkbox" name="categories[]" value="<?= (int)$cat['id'] ?>" id="cat_<?= (int)$cat['id'] ?>"
-                                           <?= in_array($cat['id'], $product['category_ids'] ?? []) ? 'checked' : '' ?>>
-                                    <label for="cat_<?= (int)$cat['id'] ?>"><?= e($cat['name']) ?></label>
-                                </div>
+                                <option value="<?= (int)$cat['id'] ?>" <?= in_array($cat['id'], $product['category_ids'] ?? []) ? 'selected' : '' ?>>
+                                    <?= e($cat['name']) ?>
+                                </option>
                             <?php endforeach; ?>
-                        </div>
+                        </select>
                     <?php endif; ?>
                 </div>
 
@@ -46,3 +45,16 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const selectEl = document.getElementById('category_select');
+    if (!selectEl) return;
+    new TomSelect('#category_select', {
+        plugins: ['remove_button'],
+        placeholder: 'Rechercher une catégorie…',
+        create: false
+    });
+});
+</script>

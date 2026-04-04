@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.min.css">
 <div class="auth-container" style="max-width:520px;">
     <div class="card">
         <div class="card-body">
@@ -15,20 +16,13 @@
                     <?php if (empty($categories)): ?>
                         <p class="text-muted text-small">Aucune catégorie. <a href="/spaces/<?= (int)$space['id'] ?>/categories/create">Créer une catégorie</a></p>
                     <?php else: ?>
-                        <div class="checkbox-group">
+                        <select id="category_select" name="categories[]" multiple placeholder="Rechercher une catégorie...">
                             <?php foreach ($categories as $cat): ?>
-                                <div class="form-check">
-                                    <input type="checkbox" name="categories[]" value="<?= (int)$cat['id'] ?>" id="cat_<?= (int)$cat['id'] ?>"
-                                           class="category-checkbox"
-                                           data-max-days="<?= e($cat['max_consumption_days'] ?? '') ?>">
-                                    <label for="cat_<?= (int)$cat['id'] ?>"><?= e($cat['name']) ?>
-                                        <?php if ($cat['max_consumption_days']): ?>
-                                            <span class="text-muted text-small">(<?= (int)$cat['max_consumption_days'] ?> j)</span>
-                                        <?php endif; ?>
-                                    </label>
-                                </div>
+                                <option value="<?= (int)$cat['id'] ?>">
+                                    <?= e($cat['name']) ?><?= $cat['max_consumption_days'] ? ' (' . (int)$cat['max_consumption_days'] . ' j)' : '' ?>
+                                </option>
                             <?php endforeach; ?>
-                        </div>
+                        </select>
                     <?php endif; ?>
                 </div>
 
@@ -53,26 +47,40 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const checkboxes = document.querySelectorAll('.category-checkbox');
-    const stockDate = document.getElementById('stock_date');
+document.addEventListener('DOMContentLoaded', function () {
+    const categoryDays = {
+        <?php foreach ($categories as $cat): ?>
+        <?= (int)$cat['id'] ?>: <?= (int)($cat['max_consumption_days'] ?? 0) ?>,
+        <?php endforeach; ?>
+    };
+
+    const stockDate  = document.getElementById('stock_date');
     const expiryDate = document.getElementById('expiry_date');
     const expiryHint = document.getElementById('expiry_hint');
+    const selectEl   = document.getElementById('category_select');
+
+    if (!selectEl) return;
+
+    const ts = new TomSelect('#category_select', {
+        plugins: ['remove_button'],
+        placeholder: 'Rechercher une catégorie…',
+        create: false,
+        onChange: updateExpiryDate
+    });
 
     function updateExpiryDate() {
+        const selected = ts.getValue();
         let minDays = null;
-        checkboxes.forEach(function(cb) {
-            if (cb.checked && cb.dataset.maxDays) {
-                const days = parseInt(cb.dataset.maxDays);
-                if (minDays === null || days < minDays) minDays = days;
-            }
+        selected.forEach(function (v) {
+            const days = categoryDays[parseInt(v)];
+            if (days && days > 0 && (minDays === null || days < minDays)) minDays = days;
         });
-
         if (minDays !== null && stockDate.value) {
-            const date = new Date(stockDate.value);
-            date.setDate(date.getDate() + minDays);
-            const suggested = date.toISOString().split('T')[0];
+            const d = new Date(stockDate.value);
+            d.setDate(d.getDate() + minDays);
+            const suggested = d.toISOString().split('T')[0];
             if (!expiryDate.value || expiryDate.dataset.autoSet === 'true') {
                 expiryDate.value = suggested;
                 expiryDate.dataset.autoSet = 'true';
@@ -83,8 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    checkboxes.forEach(function(cb) { cb.addEventListener('change', updateExpiryDate); });
     stockDate.addEventListener('change', updateExpiryDate);
-    expiryDate.addEventListener('input', function() { this.dataset.autoSet = 'false'; });
+    expiryDate.addEventListener('input', function () { this.dataset.autoSet = 'false'; });
 });
 </script>
