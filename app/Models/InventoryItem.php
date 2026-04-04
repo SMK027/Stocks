@@ -38,20 +38,15 @@ class InventoryItem extends Model
 
     /**
      * Crée ou met à jour un élément d'inventaire.
+     * Deux entrées pour le même produit/emplacement sont considérées distinctes
+     * si stock_date ou expiry_date diffèrent.
      */
     public function upsert(int $spaceId, int $productId, int $locationId, int $quantity, ?string $stockDate = null, ?string $expiryDate = null): int
     {
-        $existing = $this->findOneBy([
-            'product_id' => $productId,
-            'location_id' => $locationId,
-        ]);
+        $existing = $this->findByProductLocationDates($productId, $locationId, $stockDate, $expiryDate);
 
         if ($existing) {
-            $this->update($existing['id'], [
-                'quantity'    => $quantity,
-                'stock_date'  => $stockDate,
-                'expiry_date' => $expiryDate,
-            ]);
+            $this->update($existing['id'], ['quantity' => $quantity]);
             return (int)$existing['id'];
         }
 
@@ -63,6 +58,32 @@ class InventoryItem extends Model
             'stock_date'  => $stockDate,
             'expiry_date' => $expiryDate,
         ]);
+    }
+
+    /**
+     * Recherche une entrée d'inventaire par produit, emplacement et dates.
+     * Gère correctement les valeurs NULL via IS NULL.
+     */
+    private function findByProductLocationDates(int $productId, int $locationId, ?string $stockDate, ?string $expiryDate): ?array
+    {
+        $stockCondition  = $stockDate  !== null ? 'stock_date = :stock_date'   : 'stock_date IS NULL';
+        $expiryCondition = $expiryDate !== null ? 'expiry_date = :expiry_date' : 'expiry_date IS NULL';
+
+        $params = ['product_id' => $productId, 'location_id' => $locationId];
+        if ($stockDate  !== null) { $params['stock_date']  = $stockDate; }
+        if ($expiryDate !== null) { $params['expiry_date'] = $expiryDate; }
+
+        $stmt = $this->db->prepare(
+            "SELECT * FROM {$this->table}
+             WHERE product_id = :product_id
+               AND location_id = :location_id
+               AND {$stockCondition}
+               AND {$expiryCondition}
+             LIMIT 1"
+        );
+        $stmt->execute($params);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $result ?: null;
     }
 
     /**

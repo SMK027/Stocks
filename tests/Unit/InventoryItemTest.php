@@ -56,7 +56,7 @@ class InventoryItemTest extends TestCase
             is_casse INTEGER NOT NULL DEFAULT 0,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(product_id, location_id)
+            UNIQUE(product_id, location_id, stock_date, expiry_date)
         )');
 
         // Données de test
@@ -93,12 +93,34 @@ class InventoryItemTest extends TestCase
 
     public function testUpsertUpdatesExisting(): void
     {
-        $id1 = $this->model->upsert(1, 1, 1, 5);
-        $id2 = $this->model->upsert(1, 1, 1, 15);
+        $id1 = $this->model->upsert(1, 1, 1, 5, '2026-01-01', '2026-06-01');
+        $id2 = $this->model->upsert(1, 1, 1, 15, '2026-01-01', '2026-06-01');
 
         $this->assertSame($id1, $id2);
         $item = $this->model->find($id1);
         $this->assertSame('15', (string)$item['quantity']);
+    }
+
+    public function testUpsertCreatesNewForDifferentDates(): void
+    {
+        $id1 = $this->model->upsert(1, 1, 1, 5,  '2026-01-01', '2026-06-01');
+        $id2 = $this->model->upsert(1, 1, 1, 10, '2026-03-01', '2026-09-01');
+
+        $this->assertNotSame($id1, $id2);
+
+        $items = $this->model->findBySpace(1);
+        $this->assertCount(2, $items);
+    }
+
+    public function testUpsertCreatesNewForDifferentExpiryDate(): void
+    {
+        $id1 = $this->model->upsert(1, 1, 1, 5,  '2026-01-01', '2026-06-01');
+        $id2 = $this->model->upsert(1, 1, 1, 8,  '2026-01-01', '2026-12-31');
+
+        $this->assertNotSame($id1, $id2);
+
+        $items = $this->model->findBySpace(1);
+        $this->assertCount(2, $items);
     }
 
     public function testFindBySpace(): void
