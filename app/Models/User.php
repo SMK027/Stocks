@@ -69,6 +69,19 @@ class User extends Model
     }
 
     /**
+     * Met à jour le profil d'un utilisateur.
+     */
+    public function updateProfile(int $userId, array $data): bool
+    {
+        $allowed = ['firstname', 'lastname', 'email', 'username'];
+        $filtered = array_intersect_key($data, array_flip($allowed));
+        if (empty($filtered)) {
+            return false;
+        }
+        return $this->update($userId, $filtered);
+    }
+
+    /**
      * Met à jour le rôle global d'un utilisateur.
      */
     public function updateGlobalRole(int $userId, string $role): bool

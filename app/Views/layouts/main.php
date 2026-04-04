@@ -22,8 +22,10 @@
                 <?php if (is_authenticated()): ?>
                     <a href="/spaces" class="navbar-link"><i class="bi bi-grid"></i> Espaces</a>
                     <div class="navbar-user">
-                        <span class="navbar-avatar navbar-avatar-placeholder"><?= strtoupper(substr(current_username(), 0, 1)) ?></span>
-                        <span class="text-small"><?= e(current_username()) ?></span>
+                        <a href="/profile" class="navbar-profile-link" title="Mon profil">
+                            <span class="navbar-avatar navbar-avatar-placeholder"><?= strtoupper(substr(current_username(), 0, 1)) ?></span>
+                            <span class="text-small"><?= e(current_username()) ?></span>
+                        </a>
                         <a href="/logout" class="btn btn-sm btn-outline">Déconnexion</a>
                     </div>
                 <?php else: ?>

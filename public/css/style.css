@@ -189,6 +189,15 @@ p { margin-bottom: 1rem; }
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    transition: background 0.2s;
+}
+
+.navbar-profile-link:hover {
+    background: var(--gray-lighter);
 }
 
 .navbar-avatar {
@@ -1252,6 +1261,19 @@ select.form-control {
 /* -----------------------------------------------------------
    Gestion de Stocks — Styles spécifiques
    ----------------------------------------------------------- */
+
+/* Grille 2 colonnes pour profil */
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
 
 /* Checkbox group pour catégories */
 .checkbox-group {

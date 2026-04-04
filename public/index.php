@@ -22,6 +22,7 @@ use App\Controllers\CategoryController;
 use App\Controllers\LocationController;
 use App\Controllers\ProductController;
 use App\Controllers\InventoryController;
+use App\Controllers\ProfileController;
 
 // Démarrer la session
 Session::start();
@@ -52,6 +53,11 @@ $router->post('/login', AuthController::class, 'login');
 $router->get('/register', AuthController::class, 'registerForm');
 $router->post('/register', AuthController::class, 'register');
 $router->get('/logout', AuthController::class, 'logout');
+
+// --- Profil utilisateur ---
+$router->get('/profile', ProfileController::class, 'edit');
+$router->post('/profile', ProfileController::class, 'update');
+$router->post('/profile/password', ProfileController::class, 'updatePassword');
 
 // --- Espaces ---
 $router->get('/spaces', SpaceController::class, 'index');
