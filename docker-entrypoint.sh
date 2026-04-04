@@ -23,9 +23,16 @@ chown www-data:www-data /var/log/app-cron.log
     echo "DB_PASS=${DB_PASS}"
     echo "APP_URL=${APP_URL}"
     echo "APP_DEBUG=${APP_DEBUG:-false}"
+    echo "SMTP_HOST=${SMTP_HOST}"
+    echo "SMTP_PORT=${SMTP_PORT}"
+    echo "SMTP_USER=${SMTP_USER}"
+    echo "SMTP_PASS=${SMTP_PASS}"
+    echo "SMTP_ENCRYPTION=${SMTP_ENCRYPTION}"
+    echo "MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS}"
+    echo "MAIL_FROM_NAME=${MAIL_FROM_NAME}"
     echo ""
-    echo "# Ajoutez vos tâches cron ici"
-    echo "# * * * * * /usr/local/bin/php /var/www/html/bin/mon-script.php >> /var/log/app-cron.log 2>&1"
+    echo "# Récapitulatif journalier — tous les matins à 8h"
+    echo "0 8 * * * /usr/local/bin/php /var/www/html/bin/daily-digest.php >> /var/log/app-cron.log 2>&1"
 } > /tmp/app-cron
 crontab -u www-data /tmp/app-cron
 rm -f /tmp/app-cron

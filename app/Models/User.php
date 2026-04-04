@@ -73,7 +73,7 @@ class User extends Model
      */
     public function updateProfile(int $userId, array $data): bool
     {
-        $allowed = ['firstname', 'lastname', 'email', 'username'];
+        $allowed = ['firstname', 'lastname', 'email', 'username', 'daily_digest'];
         $filtered = array_intersect_key($data, array_flip($allowed));
         if (empty($filtered)) {
             return false;

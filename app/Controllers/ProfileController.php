@@ -49,6 +49,8 @@ class ProfileController extends Controller
         $user = $this->userModel->find($userId);
 
         $data = $this->getPostData(['firstname', 'lastname', 'email', 'username', 'password_confirm_email']);
+        // La checkbox non cochée n'est pas envoyée — normalisation
+        $data['daily_digest'] = isset($_POST['daily_digest']) && $_POST['daily_digest'] === '1' ? 1 : 0;
 
         // Validation email
         if (empty($data['email'])) {

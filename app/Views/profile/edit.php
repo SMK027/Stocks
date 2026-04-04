@@ -119,3 +119,34 @@
         </div>
     </div>
 </div>
+
+<!-- Notifications -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-body">
+        <h3><i class="bi bi-bell"></i> Notifications par email</h3>
+        <form method="POST" action="/profile">
+            <?= csrf_field() ?>
+            <!-- Champs cachés pour conserver les valeurs actuelles -->
+            <input type="hidden" name="firstname" value="<?= e($user['firstname'] ?? '') ?>">
+            <input type="hidden" name="lastname"  value="<?= e($user['lastname']  ?? '') ?>">
+            <input type="hidden" name="username"  value="<?= e($user['username']) ?>">
+            <input type="hidden" name="email"     value="<?= e($user['email']) ?>">
+            <div class="form-group">
+                <label class="toggle-label">
+                    <input type="checkbox" name="daily_digest" value="1"
+                           <?= !empty($user['daily_digest']) ? 'checked' : '' ?>>
+                    <span class="toggle-track">
+                        <span class="toggle-thumb"></span>
+                    </span>
+                    <span>Recevoir un récapitulatif journalier par email</span>
+                </label>
+                <span class="form-hint">Chaque matin, un résumé des produits périmés et proches de leur date limite sera envoyé à <strong><?= e($user['email']) ?></strong>.</span>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-check-lg"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

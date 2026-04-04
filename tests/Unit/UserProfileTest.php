@@ -28,6 +28,7 @@ class UserProfileTest extends TestCase
             email TEXT NOT NULL UNIQUE,
             password TEXT NOT NULL,
             global_role TEXT DEFAULT "user",
+            daily_digest INTEGER NOT NULL DEFAULT 0,
             avatar TEXT DEFAULT NULL,
             bio TEXT DEFAULT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -100,5 +101,34 @@ class UserProfileTest extends TestCase
         $user = $this->model->find($id);
         $this->assertTrue(password_verify('newpassword', $user['password']));
         $this->assertFalse(password_verify('oldpassword', $user['password']));
+    }
+
+    public function testEnableDailyDigest(): void
+    {
+        $id = $this->model->register('frank', 'frank@test.com', 'password123');
+
+        $this->model->updateProfile($id, ['daily_digest' => 1]);
+
+        $user = $this->model->find($id);
+        $this->assertSame('1', (string)$user['daily_digest']);
+    }
+
+    public function testDisableDailyDigest(): void
+    {
+        $id = $this->model->register('grace', 'grace@test.com', 'password123');
+
+        $this->model->updateProfile($id, ['daily_digest' => 1]);
+        $this->model->updateProfile($id, ['daily_digest' => 0]);
+
+        $user = $this->model->find($id);
+        $this->assertSame('0', (string)$user['daily_digest']);
+    }
+
+    public function testDailyDigestDefaultIsZero(): void
+    {
+        $id = $this->model->register('henry', 'henry@test.com', 'password123');
+
+        $user = $this->model->find($id);
+        $this->assertSame('0', (string)$user['daily_digest']);
     }
 }
