@@ -155,7 +155,7 @@ class ProfileController extends Controller
         $body .= '&#128295; Ceci est un <strong>email de test</strong> (mode débogage actif).</p>';
         $body .= '<h2 style="color:#3a86ff;">Récapitulatif du ' . $today . '</h2>';
         $body .= '<p>Bonjour ' . htmlspecialchars($prenom, ENT_QUOTES) . ',</p>';
-        $body .= '<p>Voici votre résumé quotidien de l\'\u00e9tat de vos stocks.</p>';
+        $body .= '<p>Voici votre résumé quotidien de l\'état de vos stocks.</p>';
 
         if (!empty($expiredItems)) {
             $body .= '<h3 style="color:#ef476f;">⚠️ Produits périmés (' . count($expiredItems) . ')</h3>';

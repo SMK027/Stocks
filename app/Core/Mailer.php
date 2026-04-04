@@ -21,7 +21,8 @@ class Mailer
     public static function send(string $toEmail, string $toName, string $subject, string $htmlBody): void
     {
         $mail = new PHPMailer(true);
-        $mail->CharSet = 'UTF-8';
+        $mail->CharSet  = 'UTF-8';
+        $mail->Encoding = PHPMailer::ENCODING_QUOTED_PRINTABLE;
 
         $smtpHost = getenv('SMTP_HOST') ?: '';
 
