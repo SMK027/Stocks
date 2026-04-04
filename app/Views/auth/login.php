@@ -26,6 +26,9 @@
             <p class="text-center text-muted text-small mt-2">
                 Pas encore de compte ? <a href="/register">Créer un compte</a>
             </p>
+            <p class="text-center text-muted text-small">
+                <a href="/password-reset">Mot de passe oublié ?</a>
+            </p>
         </div>
     </div>
 </div>

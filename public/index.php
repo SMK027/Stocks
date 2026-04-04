@@ -24,6 +24,7 @@ use App\Controllers\ProductController;
 use App\Controllers\InventoryController;
 use App\Controllers\ProfileController;
 use App\Controllers\DashboardController;
+use App\Controllers\PasswordResetController;
 
 // Démarrer la session
 Session::start();
@@ -54,6 +55,12 @@ $router->post('/login', AuthController::class, 'login');
 $router->get('/register', AuthController::class, 'registerForm');
 $router->post('/register', AuthController::class, 'register');
 $router->get('/logout', AuthController::class, 'logout');
+
+// --- Réinitialisation de mot de passe ---
+$router->get('/password-reset', PasswordResetController::class, 'requestForm');
+$router->post('/password-reset', PasswordResetController::class, 'request');
+$router->get('/password-reset/{token}', PasswordResetController::class, 'resetForm');
+$router->post('/password-reset/{token}', PasswordResetController::class, 'reset');
 
 // --- Tableau de bord ---
 $router->get('/dashboard', DashboardController::class, 'index');
