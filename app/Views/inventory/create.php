@@ -55,10 +55,6 @@
                         <a href="/spaces/<?= (int)$space['id'] ?>/inventory" class="btn btn-outline">Annuler</a>
                     </div>
                 </form>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
 <script>
@@ -71,7 +67,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const productCatMap = {
         <?php foreach ($productCategories as $prodId => $catIds): ?>
         <?= (int)$prodId ?>: [<?= implode(',', array_map('intval', $catIds)) ?>],
-        <?php endforeach; ?>
+        <?php endforeach;
+    ?>
     };
 
     const stockDate  = document.getElementById('stock_date');
@@ -91,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (days && days > 0 && (minDays === null || days < minDays)) minDays = days;
         });
         if (minDays !== null && stockDate.value) {
-            const d = new Date(stockDate.value);
+            const d = new Date(stockDate.value + 'T00:00:00');
             d.setDate(d.getDate() + minDays);
             const suggested = d.toISOString().split('T')[0];
             if (!expiryDate.value || expiryDate.dataset.autoSet === 'true') {
@@ -108,3 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
     expiryDate.addEventListener('input', function () { this.dataset.autoSet = 'false'; });
 });
 </script>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
