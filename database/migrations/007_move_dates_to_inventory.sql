@@ -2,8 +2,8 @@
 
 -- 1. Ajouter les colonnes dans inventory_items
 ALTER TABLE inventory_items
-    ADD COLUMN stock_date  DATE DEFAULT NULL COMMENT 'Date de mise en stock',
-    ADD COLUMN expiry_date DATE DEFAULT NULL COMMENT 'Date limite de consommation';
+    ADD COLUMN IF NOT EXISTS stock_date  DATE DEFAULT NULL COMMENT 'Date de mise en stock',
+    ADD COLUMN IF NOT EXISTS expiry_date DATE DEFAULT NULL COMMENT 'Date limite de consommation';
 
 -- 2. Migrer les données existantes (copie depuis products)
 UPDATE inventory_items ii
