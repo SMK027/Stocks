@@ -10,7 +10,7 @@ use App\Core\Session;
 class HomeController extends Controller
 {
     /**
-     * Page d'accueil — redirige vers les espaces si connecté.
+     * Page d'accueil — redirige vers le tableau de bord si connecté.
      */
     public function index(): void
     {

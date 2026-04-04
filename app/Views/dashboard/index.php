@@ -2,27 +2,24 @@
     <h1><i class="bi bi-speedometer2"></i> Tableau de bord</h1>
 </div>
 
-<!-- Statistiques rapides -->
-<div class="dashboard-stats">
-    <div class="stat-card stat-danger">
-        <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
-        <div class="stat-info">
-            <span class="stat-number"><?= count($expired) ?></span>
-            <span class="stat-label">Périmé<?= count($expired) > 1 ? 's' : '' ?></span>
-        </div>
-    </div>
-    <div class="stat-card stat-warning">
-        <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
-        <div class="stat-info">
-            <span class="stat-number"><?= count($expiringSoon) ?></span>
-            <span class="stat-label">Expire bientôt</span>
-        </div>
-    </div>
+<!-- Filtres par statut -->
+<div class="dashboard-filters">
+    <button type="button" class="filter-btn filter-btn-all active" data-filter="all">
+        <i class="bi bi-funnel"></i> Tout afficher
+    </button>
+    <button type="button" class="filter-btn filter-btn-danger" data-filter="expired">
+        <i class="bi bi-exclamation-triangle-fill"></i> Périmés <span class="filter-count"><?= count($expired) ?></span>
+    </button>
+    <button type="button" class="filter-btn filter-btn-warning" data-filter="expiring">
+        <i class="bi bi-clock-history"></i> Expire bientôt <span class="filter-count"><?= count($expiringSoon) ?></span>
+    </button>
+    <button type="button" class="filter-btn filter-btn-success" data-filter="ok">
+        <i class="bi bi-check-circle"></i> OK
+    </button>
 </div>
 
 <!-- Produits périmés -->
-<?php if (!empty($expired)): ?>
-<div class="card dashboard-section">
+<div class="card dashboard-section" data-section="expired" <?= empty($expired) ? 'style="display:none"' : '' ?>>
     <div class="card-body">
         <h3 class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Produits périmés</h3>
         <div class="table-responsive">
@@ -55,10 +52,9 @@
         </div>
     </div>
 </div>
-<?php endif; ?>
 
 <!-- Produits à consommer prochainement -->
-<div class="card dashboard-section">
+<div class="card dashboard-section" data-section="expiring">
     <div class="card-body">
         <h3 class="text-warning-dark"><i class="bi bi-clock-history"></i> À consommer prochainement (14 jours)</h3>
         <?php if (empty($expiringSoon)): ?>
@@ -110,6 +106,7 @@
             <span class="legend-item"><span class="legend-dot legend-dot-warning"></span> Expire bientôt</span>
             <span class="legend-item"><span class="legend-dot legend-dot-danger"></span> Périmé</span>
         </div>
+        <p class="text-muted text-small" id="calendarFilterHint" style="display:none;"><i class="bi bi-funnel"></i> Filtre actif — seuls les éléments correspondants sont affichés.</p>
         <div id="calendar"></div>
     </div>
 </div>
@@ -167,5 +164,46 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     calendar.render();
+
+    // --- Filtrage par statut ---
+    var allEvents = events.slice();
+    var activeFilter = 'all';
+    var filterBtns = document.querySelectorAll('.filter-btn');
+    var sectionExpired = document.querySelector('[data-section="expired"]');
+    var sectionExpiring = document.querySelector('[data-section="expiring"]');
+    var filterHint = document.getElementById('calendarFilterHint');
+
+    filterBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            activeFilter = btn.dataset.filter;
+
+            // Filtrer les sections tableau
+            if (activeFilter === 'all') {
+                if (sectionExpired) sectionExpired.style.display = '';
+                if (sectionExpiring) sectionExpiring.style.display = '';
+            } else if (activeFilter === 'expired') {
+                if (sectionExpired) sectionExpired.style.display = '';
+                if (sectionExpiring) sectionExpiring.style.display = 'none';
+            } else if (activeFilter === 'expiring') {
+                if (sectionExpired) sectionExpired.style.display = 'none';
+                if (sectionExpiring) sectionExpiring.style.display = '';
+            } else if (activeFilter === 'ok') {
+                if (sectionExpired) sectionExpired.style.display = 'none';
+                if (sectionExpiring) sectionExpiring.style.display = 'none';
+            }
+
+            // Filtrer le calendrier
+            calendar.removeAllEvents();
+            var filtered = activeFilter === 'all'
+                ? allEvents
+                : allEvents.filter(function(ev) { return ev.extendedProps.status === activeFilter; });
+            calendar.addEventSource(filtered);
+
+            // Indicateur de filtre actif
+            filterHint.style.display = activeFilter === 'all' ? 'none' : '';
+        });
+    });
 });
 </script>

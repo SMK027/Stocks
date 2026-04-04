@@ -37,10 +37,13 @@ class DashboardController extends Controller
 
             if ($isExpired) {
                 $color = '#ef476f';
+                $status = 'expired';
             } elseif ($isExpiringSoon) {
                 $color = '#ffd166';
+                $status = 'expiring';
             } else {
                 $color = '#06d6a0';
+                $status = 'ok';
             }
 
             $calendarEvents[] = [
@@ -55,6 +58,7 @@ class DashboardController extends Controller
                     'spaceId' => $item['sid'],
                     'stockDate' => $item['stock_date'],
                     'expiryDate' => $item['expiry_date'],
+                    'status' => $status,
                 ],
             ];
         }
