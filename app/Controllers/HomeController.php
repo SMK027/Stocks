@@ -15,7 +15,7 @@ class HomeController extends Controller
     public function index(): void
     {
         if (Session::get('user_id')) {
-            $this->redirect('/spaces');
+            $this->redirect('/dashboard');
             return;
         }
 

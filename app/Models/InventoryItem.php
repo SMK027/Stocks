@@ -117,4 +117,75 @@ class InventoryItem extends Model
         $stmt->execute(['space_id' => $spaceId]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Retourne les produits à consommer prochainement pour tous les espaces d'un utilisateur.
+     */
+    public function findExpiringSoonForUser(int $userId, int $days = 14): array
+    {
+        $curdate = $this->isSQLite() ? "date('now')" : 'CURDATE()';
+        $dateAdd = $this->isSQLite()
+            ? "date('now', '+' || :days || ' days')"
+            : 'DATE_ADD(CURDATE(), INTERVAL :days DAY)';
+
+        $stmt = $this->db->prepare(
+            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+                    l.name as location_name, s.name as space_name, s.id as sid
+             FROM inventory_items ii
+             INNER JOIN products p ON p.id = ii.product_id
+             INNER JOIN locations l ON l.id = ii.location_id
+             INNER JOIN spaces s ON s.id = ii.space_id
+             INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
+             WHERE p.expiry_date IS NOT NULL
+               AND p.expiry_date <= {$dateAdd}
+               AND p.expiry_date >= {$curdate}
+             ORDER BY p.expiry_date ASC"
+        );
+        $stmt->execute(['user_id' => $userId, 'days' => $days]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Retourne les produits périmés pour tous les espaces d'un utilisateur.
+     */
+    public function findExpiredForUser(int $userId): array
+    {
+        $curdate = $this->isSQLite() ? "date('now')" : 'CURDATE()';
+
+        $stmt = $this->db->prepare(
+            "SELECT ii.*, p.name as product_name, p.expiry_date, p.stock_date,
+                    l.name as location_name, s.name as space_name, s.id as sid
+             FROM inventory_items ii
+             INNER JOIN products p ON p.id = ii.product_id
+             INNER JOIN locations l ON l.id = ii.location_id
+             INNER JOIN spaces s ON s.id = ii.space_id
+             INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
+             WHERE p.expiry_date IS NOT NULL
+               AND p.expiry_date < {$curdate}
+             ORDER BY p.expiry_date ASC"
+        );
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Retourne tous les produits avec date de péremption pour le calendrier d'un utilisateur.
+     */
+    public function findAllWithExpiryForUser(int $userId): array
+    {
+        $stmt = $this->db->prepare(
+            "SELECT ii.id, p.name as product_name, p.expiry_date, p.stock_date,
+                    l.name as location_name, s.name as space_name, s.id as sid,
+                    ii.quantity
+             FROM inventory_items ii
+             INNER JOIN products p ON p.id = ii.product_id
+             INNER JOIN locations l ON l.id = ii.location_id
+             INNER JOIN spaces s ON s.id = ii.space_id
+             INNER JOIN space_members sm ON sm.space_id = s.id AND sm.user_id = :user_id
+             WHERE p.expiry_date IS NOT NULL
+             ORDER BY p.expiry_date ASC"
+        );
+        $stmt->execute(['user_id' => $userId]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
 }

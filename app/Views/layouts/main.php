@@ -20,6 +20,7 @@
 
             <div class="navbar-menu" id="navMenu">
                 <?php if (is_authenticated()): ?>
+                    <a href="/dashboard" class="navbar-link"><i class="bi bi-speedometer2"></i> Tableau de bord</a>
                     <a href="/spaces" class="navbar-link"><i class="bi bi-grid"></i> Espaces</a>
                     <div class="navbar-user">
                         <a href="/profile" class="navbar-profile-link" title="Mon profil">
