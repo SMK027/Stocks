@@ -48,7 +48,7 @@ class ProfileController extends Controller
         $userId = $this->getCurrentUserId();
         $user = $this->userModel->find($userId);
 
-        $data = $this->getPostData(['firstname', 'lastname', 'email', 'username']);
+        $data = $this->getPostData(['firstname', 'lastname', 'email', 'username', 'password_confirm_email']);
 
         // Validation email
         if (empty($data['email'])) {
@@ -72,6 +72,19 @@ class ProfileController extends Controller
 
         // Vérifier unicité email si changé
         if ($data['email'] !== $user['email']) {
+            // Exiger le mot de passe pour changer l'email
+            if (empty($data['password_confirm_email'])) {
+                $this->setFlash('danger', 'Le mot de passe est requis pour modifier l\'adresse email.');
+                $this->redirect('/profile');
+                return;
+            }
+
+            if (!password_verify($data['password_confirm_email'], $user['password'])) {
+                $this->setFlash('danger', 'Le mot de passe est incorrect.');
+                $this->redirect('/profile');
+                return;
+            }
+
             $existing = $this->userModel->findByEmail($data['email']);
             if ($existing) {
                 $this->setFlash('danger', 'Cette adresse email est déjà utilisée.');

@@ -35,6 +35,35 @@
                     <input type="email" id="email" name="email" class="form-control"
                            value="<?= e($user['email']) ?>" required>
                 </div>
+                <div class="form-group" id="password-confirm-email-group" style="display: none;">
+                    <label for="password_confirm_email" class="form-label">Mot de passe <span class="text-danger">*</span></label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password_confirm_email" name="password_confirm_email" class="form-control"
+                               placeholder="Saisissez votre mot de passe pour confirmer">
+                        <button type="button" class="btn-toggle-password" data-target="password_confirm_email" title="Afficher">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <span class="form-hint">Requis pour modifier l'adresse email</span>
+                </div>
+                <script>
+                (function() {
+                    var emailInput = document.getElementById('email');
+                    var originalEmail = <?= json_encode($user['email']) ?>;
+                    var group = document.getElementById('password-confirm-email-group');
+                    var pwdInput = document.getElementById('password_confirm_email');
+                    emailInput.addEventListener('input', function() {
+                        if (emailInput.value !== originalEmail) {
+                            group.style.display = '';
+                            pwdInput.required = true;
+                        } else {
+                            group.style.display = 'none';
+                            pwdInput.required = false;
+                            pwdInput.value = '';
+                        }
+                    });
+                })();
+                </script>
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-lg"></i> Enregistrer
