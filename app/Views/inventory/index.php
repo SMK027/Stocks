@@ -93,6 +93,15 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
                             <?php if ($canManage): ?>
                                 <td class="text-right">
                                     <div class="btn-group">
+                                        <button type="button"
+                                            class="btn btn-sm btn-outline-danger js-decrease-btn"
+                                            title="Diminuer le stock"
+                                            data-id="<?= (int)$item['id'] ?>"
+                                            data-name="<?= e($item['product_name']) ?>"
+                                            data-qty="<?= (int)$item['quantity'] ?>"
+                                            data-action="/spaces/<?= (int)$space['id'] ?>/inventory/<?= (int)$item['id'] ?>/decrease">
+                                            <i class="bi bi-dash-lg"></i>
+                                        </button>
                                         <a href="/spaces/<?= (int)$space['id'] ?>/inventory/<?= (int)$item['id'] ?>/edit" class="btn btn-sm btn-outline"><i class="bi bi-pencil"></i></a>
                                         <form method="POST" action="/spaces/<?= (int)$space['id'] ?>/inventory/<?= (int)$item['id'] ?>/casse" onsubmit="return confirm('Mettre ce produit en casse ?')">
                                             <?= csrf_field() ?>
@@ -168,4 +177,79 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
             </div>
         </div>
     </div>
+<?php endif; ?>
+
+<!-- Modal : diminuer le stock -->
+<?php if ($canManage): ?>
+<div class="modal-overlay" id="decrease-modal">
+    <div class="modal">
+        <h3><i class="bi bi-dash-circle"></i> Retirer du stock</h3>
+        <p id="decrease-modal-desc" class="text-muted"></p>
+        <form method="POST" id="decrease-form">
+            <?= csrf_field() ?>
+            <div class="form-group">
+                <label class="form-label" for="decrease_by">Quantité à retirer *</label>
+                <input type="number" id="decrease_by" name="decrease_by"
+                       class="form-control" min="1" required>
+                <span class="form-hint" id="decrease-hint"></span>
+            </div>
+            <div class="btn-group" style="justify-content:flex-end;">
+                <button type="button" class="btn btn-outline" id="decrease-cancel">Annuler</button>
+                <button type="submit" class="btn btn-primary">Confirmer</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+(function () {
+    const overlay   = document.getElementById('decrease-modal');
+    const form      = document.getElementById('decrease-form');
+    const desc      = document.getElementById('decrease-modal-desc');
+    const input     = document.getElementById('decrease_by');
+    const hint      = document.getElementById('decrease-hint');
+    const cancelBtn = document.getElementById('decrease-cancel');
+
+    document.querySelectorAll('.js-decrease-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const qty    = parseInt(this.dataset.qty, 10);
+            const name   = this.dataset.name;
+            const action = this.dataset.action;
+
+            desc.textContent = name + ' \u2014 stock actuel\u00a0: ' + qty;
+            input.max   = qty;
+            input.value = '';
+            hint.textContent = 'Valeur comprise entre 1 et ' + qty + '.';
+            hint.style.color = '';
+            form.action = action;
+
+            overlay.classList.add('active');
+            setTimeout(function () { input.focus(); }, 50);
+        });
+    });
+
+    form.addEventListener('submit', function (e) {
+        const val = parseInt(input.value, 10);
+        const max = parseInt(input.max, 10);
+        if (isNaN(val) || val < 1 || val > max) {
+            e.preventDefault();
+            hint.textContent = 'Valeur invalide\u00a0: saisissez un nombre entre 1 et ' + max + '.';
+            hint.style.color = 'var(--danger)';
+            input.focus();
+        }
+    });
+
+    function closeModal() {
+        overlay.classList.remove('active');
+        hint.style.color = '';
+    }
+
+    cancelBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) closeModal();
+    });
+})();
+</script>
 <?php endif; ?>

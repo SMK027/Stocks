@@ -234,6 +234,52 @@ class InventoryController extends Controller
     }
 
     /**
+     * Diminuer la quantité d'une entrée d'inventaire.
+     * Si la quantité résultante est 0, l'entrée est supprimée.
+     */
+    public function decrease(string $spaceId, string $id): void
+    {
+        $sid = (int)$spaceId;
+        $this->requireInventoryManagement($sid);
+        $this->validateCSRF();
+
+        $item = $this->inventoryModel->find((int)$id);
+        if (!$item || (int)$item['space_id'] !== $sid) {
+            $this->setFlash('danger', 'Entrée introuvable.');
+            $this->redirect('/spaces/' . $sid . '/inventory');
+            return;
+        }
+
+        $data = $this->getPostData(['decrease_by']);
+        $decreaseBy = (int)($data['decrease_by'] ?? 0);
+        $currentQty = (int)$item['quantity'];
+
+        if ($decreaseBy <= 0) {
+            $this->setFlash('danger', 'La quantité à retirer doit être supérieure à zéro.');
+            $this->redirect('/spaces/' . $sid . '/inventory');
+            return;
+        }
+
+        if ($decreaseBy > $currentQty) {
+            $this->setFlash('danger', 'La quantité à retirer ne peut pas dépasser le stock actuel (' . $currentQty . ').');
+            $this->redirect('/spaces/' . $sid . '/inventory');
+            return;
+        }
+
+        $newQty = $currentQty - $decreaseBy;
+
+        if ($newQty === 0) {
+            $this->inventoryModel->delete((int)$id);
+            $this->setFlash('success', 'Stock épuisé — entrée supprimée.');
+        } else {
+            $this->inventoryModel->update((int)$id, ['quantity' => $newQty]);
+            $this->setFlash('success', 'Quantité mise à jour (' . $newQty . ' restant(s)).');
+        }
+
+        $this->redirect('/spaces/' . $sid . '/inventory');
+    }
+
+    /**
      * Retirer un élément de la casse.
      */
     public function uncasse(string $spaceId, string $id): void
