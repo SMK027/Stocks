@@ -38,18 +38,27 @@ class InventoryItem extends Model
 
     /**
      * Crée ou met à jour un élément d'inventaire.
-     * Deux entrées pour le même produit/emplacement sont considérées distinctes
-     * si stock_date ou expiry_date diffèrent.
+     * - Si une entrée active (non casse) avec les mêmes clés existe → met à jour sa quantité.
+     * - Si seule une entrée en casse avec les mêmes clés existe → la restaure (enlève le flag casse).
+     * - Sinon → crée une nouvelle entrée.
      */
     public function upsert(int $spaceId, int $productId, int $locationId, int $quantity, ?string $stockDate = null, ?string $expiryDate = null): int
     {
-        $existing = $this->findByProductLocationDates($productId, $locationId, $stockDate, $expiryDate);
-
+        // 1) Entrée active correspondante
+        $existing = $this->findByProductLocationDates($productId, $locationId, $stockDate, $expiryDate, false);
         if ($existing) {
             $this->update($existing['id'], ['quantity' => $quantity]);
             return (int)$existing['id'];
         }
 
+        // 2) Entrée en casse avec les mêmes clés → restauration
+        $casseItem = $this->findByProductLocationDates($productId, $locationId, $stockDate, $expiryDate, true);
+        if ($casseItem) {
+            $this->update($casseItem['id'], ['quantity' => $quantity, 'is_casse' => 0]);
+            return (int)$casseItem['id'];
+        }
+
+        // 3) Aucune correspondance → nouvelle entrée
         return $this->create([
             'space_id'    => $spaceId,
             'product_id'  => $productId,
@@ -62,14 +71,19 @@ class InventoryItem extends Model
 
     /**
      * Recherche une entrée d'inventaire par produit, emplacement et dates.
-     * Gère correctement les valeurs NULL via IS NULL.
+     * Le paramètre $casseOnly permet de cibler les items actifs (false) ou en casse (true).
+     * Les valeurs NULL sont gérées via IS NULL pour éviter les faux négatifs SQL.
      */
-    private function findByProductLocationDates(int $productId, int $locationId, ?string $stockDate, ?string $expiryDate): ?array
+    private function findByProductLocationDates(int $productId, int $locationId, ?string $stockDate, ?string $expiryDate, bool $casseOnly = false): ?array
     {
         $stockCondition  = $stockDate  !== null ? 'stock_date = :stock_date'   : 'stock_date IS NULL';
         $expiryCondition = $expiryDate !== null ? 'expiry_date = :expiry_date' : 'expiry_date IS NULL';
 
-        $params = ['product_id' => $productId, 'location_id' => $locationId];
+        $params = [
+            'product_id'  => $productId,
+            'location_id' => $locationId,
+            'is_casse'    => $casseOnly ? 1 : 0,
+        ];
         if ($stockDate  !== null) { $params['stock_date']  = $stockDate; }
         if ($expiryDate !== null) { $params['expiry_date'] = $expiryDate; }
 
@@ -77,6 +91,7 @@ class InventoryItem extends Model
             "SELECT * FROM {$this->table}
              WHERE product_id = :product_id
                AND location_id = :location_id
+               AND is_casse = :is_casse
                AND {$stockCondition}
                AND {$expiryCondition}
              LIMIT 1"

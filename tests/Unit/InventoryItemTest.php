@@ -123,6 +123,47 @@ class InventoryItemTest extends TestCase
         $this->assertCount(2, $items);
     }
 
+    public function testUpsertDoesNotMatchCasseItem(): void
+    {
+        // Créer un item puis le mettre en casse
+        $id1 = $this->model->upsert(1, 1, 1, 5, '2026-01-01', '2026-06-01');
+        $this->model->markAsCasse($id1);
+
+        // Upsert avec des dates DIFFÉRENTES → doit créer une nouvelle entrée, pas toucher la casse
+        $id2 = $this->model->upsert(1, 1, 1, 8, '2026-03-01', '2026-09-01');
+
+        $this->assertNotSame($id1, $id2);
+
+        // L'item en casse est toujours en casse
+        $casseItem = $this->model->find($id1);
+        $this->assertSame('1', (string)$casseItem['is_casse']);
+
+        // Le nouvel item est actif
+        $newItem = $this->model->find($id2);
+        $this->assertSame('0', (string)$newItem['is_casse']);
+        $this->assertSame('8', (string)$newItem['quantity']);
+    }
+
+    public function testUpsertRestoresFromCasseWhenDatesMatch(): void
+    {
+        // Créer un item puis le mettre en casse
+        $id1 = $this->model->upsert(1, 1, 1, 5, '2026-01-01', '2026-06-01');
+        $this->model->markAsCasse($id1);
+
+        // Upsert avec les MÊMES dates → doit restaurer l'item (enlever le flag casse)
+        $id2 = $this->model->upsert(1, 1, 1, 10, '2026-01-01', '2026-06-01');
+
+        $this->assertSame($id1, $id2);
+
+        $item = $this->model->find($id1);
+        $this->assertSame('0', (string)$item['is_casse']);
+        $this->assertSame('10', (string)$item['quantity']);
+
+        // L'item restauré doit apparaître dans l'inventaire actif
+        $items = $this->model->findBySpace(1);
+        $this->assertCount(1, $items);
+    }
+
     public function testFindBySpace(): void
     {
         $this->model->create(['space_id' => 1, 'product_id' => 1, 'location_id' => 1, 'quantity' => 5]);
