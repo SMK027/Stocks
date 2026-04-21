@@ -1,70 +1,57 @@
-# Dependencies
+# ─── PHP / Composer ───────────────────────────────────────────────────────────
 /vendor/
+composer.lock
 
-prompt.md
-data/*
-
+# ─── Environment ──────────────────────────────────────────────────────────────
 .env
+.env.*
+!.env.example
 
+# ─── PHPUnit ──────────────────────────────────────────────────────────────────
+.phpunit.result.cache
+.phpunit.cache/
+coverage/
 
+# ─── Uploads & données utilisateur ───────────────────────────────────────────
+public/uploads/*
+!public/uploads/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep
 
+# ─── Docker / Base de données ─────────────────────────────────────────────────
+data/mysql/
+db_data/
 
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
 
+# ─── Mobile (Expo / React Native) ────────────────────────────────────────────
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/.env
+mobile/.env.*
+!mobile/.env.example
+mobile/android/
+mobile/ios/
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/*.orig.*
+mobile/web-build/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}    }        "test": "phpunit"    "scripts": {    },        }            "Tests\\": "tests/"        "psr-4": {    "autoload-dev": {    },        ]            "app/Helpers/functions.php"        "files": [        },            "App\\": "app/"        "psr-4": {    "autoload": {    },        "phpunit/phpunit": "^9.6"    "require-dev": {    },        "php": ">=8.0"    "require": {    "type": "project",    "description": "Boîte à outils PHP – Framework MVC léger et réutilisable",node_modules/
-
-# Environment
-.env
-
-# IDE
+# ─── IDE ──────────────────────────────────────────────────────────────────────
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 
-# OS
+# ─── OS ───────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 
-# Uploads (keep directory structure)
-public/uploads/*
-!public/uploads/.gitkeep
-
-# Docker volumes
-db_data/
-data/mysql/
-data/uploads/*
-!data/uploads/.gitkeep
-
-# Logs
-*.log
-
-# Composer
-composer.lock
-
-# PHPUnit
-.phpunit.result.cache
-.phpunit.cache/
-coverage/
-
-# Prompt
+# ─── Divers ───────────────────────────────────────────────────────────────────
 prompt.md
