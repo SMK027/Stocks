@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Alert,
   RefreshControl,
+  TextInput,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,6 +26,8 @@ type Props = NativeStackScreenProps<SpacesStackParamList, 'LocationList'>;
 export default function LocationListScreen({ navigation, route }: Props) {
   const { spaceId } = route.params;
   const qc = useQueryClient();
+  const { error: toastError } = useToast();
+  const [search, setSearch] = useState('');
 
   const { data: locations = [], isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['locations', spaceId],
@@ -34,7 +38,7 @@ export default function LocationListScreen({ navigation, route }: Props) {
     mutationFn: (id: number) => deleteLocation(spaceId, id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['locations', spaceId] }),
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Impossible de supprimer.'),
+      toastError(err?.response?.data?.message ?? 'Impossible de supprimer.'),
   });
 
   useLayoutEffect(() => {
@@ -60,12 +64,34 @@ export default function LocationListScreen({ navigation, route }: Props) {
   if (isLoading) return <LoadingView />;
   if (isError) return <ErrorView onRetry={refetch} />;
 
+  const q = search.toLowerCase();
+  const filtered = locations.filter(
+    (l) => l.name.toLowerCase().includes(q) || (l.description ?? '').toLowerCase().includes(q),
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={18} color={colors.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Rechercher un emplacement..."
+          placeholderTextColor={colors.placeholder}
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
       <FlatList
-        data={locations}
+        data={filtered}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={[styles.list, locations.length === 0 && styles.listFlex]}
+        contentContainerStyle={[styles.list, filtered.length === 0 && styles.listFlex]}
         refreshControl={
           <RefreshControl
             refreshing={isFetching && !isLoading}
@@ -77,8 +103,8 @@ export default function LocationListScreen({ navigation, route }: Props) {
         ListEmptyComponent={
           <EmptyState
             icon="location-outline"
-            title="Aucun emplacement"
-            subtitle="Créez votre premier emplacement avec le bouton +"
+            title={search ? 'Aucun résultat' : 'Aucun emplacement'}
+            subtitle={search ? `Aucun emplacement ne correspond à "${search}"` : "Créez votre premier emplacement avec le bouton +"}
           />
         }
         renderItem={({ item }) => (
@@ -115,6 +141,28 @@ export default function LocationListScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    margin: spacing.md,
+    marginBottom: spacing.sm,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+    paddingVertical: 0,
+  },
   list: { padding: spacing.md, gap: spacing.sm },
   listFlex: { flex: 1 },
   card: {

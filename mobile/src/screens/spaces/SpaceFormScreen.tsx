@@ -3,10 +3,10 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +23,7 @@ export default function SpaceFormScreen({ navigation, route }: Props) {
   const spaceId = (route.params as { spaceId?: number })?.spaceId;
   const isEdit = spaceId !== undefined;
   const qc = useQueryClient();
+  const { error: toastError, warning: toastWarning } = useToast();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -50,12 +51,12 @@ export default function SpaceFormScreen({ navigation, route }: Props) {
       navigation.goBack();
     },
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Une erreur est survenue.'),
+      toastError(err?.response?.data?.message ?? 'Une erreur est survenue.'),
   });
 
   const handleSubmit = () => {
     if (!name.trim()) {
-      Alert.alert('Champ requis', "Le nom de l'espace est obligatoire.");
+      toastWarning("Le nom de l'espace est obligatoire.");
       return;
     }
     mutation.mutate();

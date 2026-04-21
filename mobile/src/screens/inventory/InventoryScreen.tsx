@@ -8,7 +8,9 @@ import {
   Alert,
   RefreshControl,
   ScrollView,
+  TextInput,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -44,7 +46,9 @@ const TABS: { key: Tab; label: string; icon: keyof typeof Ionicons.glyphMap }[] 
 export default function InventoryScreen({ navigation, route }: Props) {
   const { spaceId } = route.params;
   const qc = useQueryClient();
+  const { error: toastError } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('actif');
+  const [search, setSearch] = useState('');
 
   const queries = {
     actif:    useQuery({ queryKey: ['inventory', spaceId, 'actif'],    queryFn: () => getInventory(spaceId) }),
@@ -56,6 +60,13 @@ export default function InventoryScreen({ navigation, route }: Props) {
   const current = queries[activeTab];
   const items: InventoryItem[] = current.data ?? [];
 
+  const q = search.toLowerCase();
+  const filtered = items.filter(
+    (i) =>
+      (i.product_name ?? '').toLowerCase().includes(q) ||
+      (i.location_name ?? '').toLowerCase().includes(q),
+  );
+
   const invalidate = () => {
     Object.keys(queries).forEach((tab) =>
       qc.invalidateQueries({ queryKey: ['inventory', spaceId, tab] }),
@@ -66,14 +77,14 @@ export default function InventoryScreen({ navigation, route }: Props) {
     mutationFn: (id: number) => deleteInventoryItem(spaceId, id),
     onSuccess: invalidate,
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Impossible de supprimer.'),
+      toastError(err?.response?.data?.message ?? 'Impossible de supprimer.'),
   });
 
   const decreaseMutation = useMutation({
     mutationFn: (id: number) => decreaseInventoryItem(spaceId, id, 1),
     onSuccess: invalidate,
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Impossible de diminuer.'),
+      toastError(err?.response?.data?.message ?? 'Impossible de diminuer.'),
   });
 
   const casseMutation = useMutation({
@@ -164,7 +175,7 @@ export default function InventoryScreen({ navigation, route }: Props) {
               <TouchableOpacity
                 key={key}
                 style={[styles.tab, isActive && styles.tabActive]}
-                onPress={() => setActiveTab(key)}
+                onPress={() => { setActiveTab(key); setSearch(''); }}
                 activeOpacity={0.75}
               >
                 <Ionicons
@@ -186,11 +197,30 @@ export default function InventoryScreen({ navigation, route }: Props) {
         </ScrollView>
       </View>
 
+      {/* Recherche */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={18} color={colors.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Rechercher un produit ou emplacement..."
+          placeholderTextColor={colors.placeholder}
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* Liste */}
       <FlatList
-        data={items}
+        data={filtered}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={[styles.list, items.length === 0 && styles.listFlex]}
+        contentContainerStyle={[styles.list, filtered.length === 0 && styles.listFlex]}
         refreshControl={
           <RefreshControl
             refreshing={current.isFetching && !current.isLoading}
@@ -202,8 +232,14 @@ export default function InventoryScreen({ navigation, route }: Props) {
         ListEmptyComponent={
           <EmptyState
             icon="cube-outline"
-            title="Aucun article"
-            subtitle={activeTab === 'actif' ? 'Ajoutez des articles avec le bouton +' : 'Aucun article dans cette catégorie.'}
+            title={search ? 'Aucun résultat' : 'Aucun article'}
+            subtitle={
+              search
+                ? `Aucun article ne correspond à "${search}"`
+                : activeTab === 'actif'
+                ? 'Ajoutez des articles avec le bouton +'
+                : 'Aucun article dans cette catégorie.'
+            }
           />
         }
         renderItem={({ item }) => {
@@ -256,6 +292,30 @@ export default function InventoryScreen({ navigation, route }: Props) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: 0,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+    paddingVertical: 0,
+  },
 
   tabBar: {
     backgroundColor: colors.card,

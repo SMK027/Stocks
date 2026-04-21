@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Alert,
   RefreshControl,
+  TextInput,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,6 +26,8 @@ type Props = NativeStackScreenProps<SpacesStackParamList, 'SpaceList'>;
 
 export default function SpaceListScreen({ navigation }: Props) {
   const qc = useQueryClient();
+  const { error: toastError } = useToast();
+  const [search, setSearch] = React.useState('');
   const { data: spaces = [], isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ['spaces'],
     queryFn: getSpaces,
@@ -33,7 +37,7 @@ export default function SpaceListScreen({ navigation }: Props) {
     mutationFn: deleteSpace,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['spaces'] }),
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Impossible de supprimer.'),
+      toastError(err?.response?.data?.message ?? 'Impossible de supprimer.'),
   });
 
   useLayoutEffect(() => {
@@ -67,20 +71,42 @@ export default function SpaceListScreen({ navigation }: Props) {
   if (isLoading) return <LoadingView />;
   if (isError) return <ErrorView onRetry={refetch} />;
 
+  const q = search.toLowerCase();
+  const filtered = spaces.filter(
+    (s) => s.name.toLowerCase().includes(q) || (s.description ?? '').toLowerCase().includes(q),
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={18} color={colors.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Rechercher un espace..."
+          placeholderTextColor={colors.placeholder}
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
       <FlatList
-        data={spaces}
+        data={filtered}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={[styles.list, spaces.length === 0 && styles.listFlex]}
+        contentContainerStyle={[styles.list, filtered.length === 0 && styles.listFlex]}
         refreshControl={
           <RefreshControl refreshing={isFetching && !isLoading} onRefresh={refetch} colors={[colors.primary]} tintColor={colors.primary} />
         }
         ListEmptyComponent={
           <EmptyState
             icon="layers-outline"
-            title="Aucun espace"
-            subtitle="Créez votre premier espace avec le bouton +"
+            title={search ? 'Aucun résultat' : 'Aucun espace'}
+            subtitle={search ? `Aucun espace ne correspond à "${search}"` : 'Créez votre premier espace avec le bouton +'}
           />
         }
         renderItem={({ item }) => (
@@ -154,6 +180,28 @@ function roleBadge(role: string): 'primary' | 'secondary' | 'neutral' {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    margin: spacing.md,
+    marginBottom: spacing.sm,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+    paddingVertical: 0,
+  },
   list: { padding: spacing.md, gap: spacing.sm },
   listFlex: { flex: 1 },
   card: {

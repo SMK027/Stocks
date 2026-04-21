@@ -9,6 +9,7 @@ import {
   Platform,
   Switch,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMe, updateMe, changePassword } from '../../api/auth';
@@ -22,6 +23,7 @@ import LoadingView from '../../components/LoadingView';
 export default function ProfileScreen() {
   const { user, setUser, logout } = useAuthStore();
   const qc = useQueryClient();
+  const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast();
 
   // Onglet actif : 'info' | 'password'
   const [tab, setTab] = useState<'info' | 'password'>('info');
@@ -63,27 +65,27 @@ export default function ProfileScreen() {
     onSuccess: (updated) => {
       setUser(updated);
       qc.invalidateQueries({ queryKey: ['me'] });
-      Alert.alert('Succès', 'Profil mis à jour.');
+      toastSuccess('Profil mis à jour.');
     },
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Impossible de mettre à jour le profil.'),
+      toastError(err?.response?.data?.message ?? 'Impossible de mettre à jour le profil.'),
   });
 
   const passwordMutation = useMutation({
     mutationFn: () => changePassword(currentPwd, newPwd),
     onSuccess: () => {
-      Alert.alert('Succès', 'Mot de passe modifié.');
+      toastSuccess('Mot de passe modifié.');
       setCurrentPwd('');
       setNewPwd('');
       setConfirmPwd('');
     },
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Impossible de changer le mot de passe.'),
+      toastError(err?.response?.data?.message ?? 'Impossible de changer le mot de passe.'),
   });
 
   const handleUpdateProfile = () => {
     if (!email.trim()) {
-      Alert.alert('Requis', "L'adresse e-mail est obligatoire.");
+      toastWarning("L'adresse e-mail est obligatoire.");
       return;
     }
     updateMutation.mutate();
@@ -91,15 +93,15 @@ export default function ProfileScreen() {
 
   const handleChangePassword = () => {
     if (!currentPwd || !newPwd || !confirmPwd) {
-      Alert.alert('Requis', 'Tous les champs sont obligatoires.');
+      toastWarning('Tous les champs sont obligatoires.');
       return;
     }
     if (newPwd !== confirmPwd) {
-      Alert.alert('Erreur', 'Les nouveaux mots de passe ne correspondent pas.');
+      toastError('Les nouveaux mots de passe ne correspondent pas.');
       return;
     }
     if (newPwd.length < 8) {
-      Alert.alert('Erreur', 'Le mot de passe doit contenir au moins 8 caractères.');
+      toastWarning('Le mot de passe doit contenir au moins 8 caractères.');
       return;
     }
     passwordMutation.mutate();

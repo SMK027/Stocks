@@ -9,6 +9,7 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -29,6 +30,7 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
   const itemId = (route.params as { itemId?: number }).itemId;
   const isEdit = itemId !== undefined;
   const qc = useQueryClient();
+  const { error: toastError, warning: toastWarning } = useToast();
 
   const [productId, setProductId] = useState<number | null>(null);
   const [locationId, setLocationId] = useState<number | null>(null);
@@ -86,14 +88,14 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
       navigation.goBack();
     },
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Une erreur est survenue.'),
+      toastError(err?.response?.data?.message ?? 'Une erreur est survenue.'),
   });
 
   const handleSubmit = () => {
-    if (!productId) { Alert.alert('Requis', 'Sélectionnez un produit.'); return; }
-    if (!locationId) { Alert.alert('Requis', 'Sélectionnez un emplacement.'); return; }
+    if (!productId) { toastWarning('Sélectionnez un produit.'); return; }
+    if (!locationId) { toastWarning('Sélectionnez un emplacement.'); return; }
     const qty = parseInt(quantity, 10);
-    if (isNaN(qty) || qty <= 0) { Alert.alert('Invalide', 'La quantité doit être un nombre positif.'); return; }
+    if (isNaN(qty) || qty <= 0) { toastWarning('La quantité doit être un nombre positif.'); return; }
     mutation.mutate();
   };
 

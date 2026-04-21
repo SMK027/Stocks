@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +18,7 @@ export default function LocationFormScreen({ navigation, route }: Props) {
   const locationId = (route.params as { locationId?: number }).locationId;
   const isEdit = locationId !== undefined;
   const qc = useQueryClient();
+  const { error: toastError, warning: toastWarning } = useToast();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -49,7 +51,7 @@ export default function LocationFormScreen({ navigation, route }: Props) {
       navigation.goBack();
     },
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Une erreur est survenue.'),
+      toastError(err?.response?.data?.message ?? 'Une erreur est survenue.'),
   });
 
   if (isEdit && isLoading) return <LoadingView />;
@@ -80,7 +82,7 @@ export default function LocationFormScreen({ navigation, route }: Props) {
             title={isEdit ? 'Enregistrer' : "Créer l'emplacement"}
             onPress={() => {
               if (!name.trim()) {
-                Alert.alert('Champ requis', 'Le nom est obligatoire.');
+                toastWarning('Le nom est obligatoire.');
                 return;
               }
               mutation.mutate();

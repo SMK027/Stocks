@@ -4,11 +4,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -28,6 +28,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
   const productId = (route.params as { productId?: number }).productId;
   const isEdit = productId !== undefined;
   const qc = useQueryClient();
+  const { error: toastError, warning: toastWarning } = useToast();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -76,7 +77,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
       navigation.goBack();
     },
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Une erreur est survenue.'),
+      toastError(err?.response?.data?.message ?? 'Une erreur est survenue.'),
   });
 
   if (isEdit && loadingProduct) return <LoadingView />;
@@ -141,7 +142,7 @@ export default function ProductFormScreen({ navigation, route }: Props) {
             title={isEdit ? 'Enregistrer' : 'Créer le produit'}
             onPress={() => {
               if (!name.trim()) {
-                Alert.alert('Champ requis', 'Le nom est obligatoire.');
+                toastWarning('Le nom est obligatoire.');
                 return;
               }
               mutation.mutate();

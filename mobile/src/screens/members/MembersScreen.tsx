@@ -11,7 +11,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  TextInput,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -39,7 +41,9 @@ const ROLES = [
 export default function MembersScreen({ navigation, route }: Props) {
   const { spaceId } = route.params;
   const qc = useQueryClient();
+  const { error: toastError, warning: toastWarning } = useToast();
 
+  const [search, setSearch] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [addUsername, setAddUsername] = useState('');
   const [addRole, setAddRole] = useState('membre');
@@ -58,14 +62,14 @@ export default function MembersScreen({ navigation, route }: Props) {
       setAddRole('membre');
     },
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? "Impossible d'ajouter ce membre."),
+      toastError(err?.response?.data?.message ?? "Impossible d'ajouter ce membre."),
   });
 
   const removeMutation = useMutation({
     mutationFn: (userId: number) => removeMember(spaceId, userId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['members', spaceId] }),
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Impossible de retirer ce membre.'),
+      toastError(err?.response?.data?.message ?? 'Impossible de retirer ce membre.'),
   });
 
   const changeRoleMutation = useMutation({
@@ -73,7 +77,7 @@ export default function MembersScreen({ navigation, route }: Props) {
       updateMember(spaceId, userId, role),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['members', spaceId] }),
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Impossible de modifier le rôle.'),
+      toastError(err?.response?.data?.message ?? 'Impossible de modifier le rôle.'),
   });
 
   useLayoutEffect(() => {
@@ -114,12 +118,34 @@ export default function MembersScreen({ navigation, route }: Props) {
   if (isLoading) return <LoadingView />;
   if (isError) return <ErrorView onRetry={refetch} />;
 
+  const q = search.toLowerCase();
+  const filtered = members.filter(
+    (m) => m.username.toLowerCase().includes(q) || m.email.toLowerCase().includes(q),
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={18} color={colors.textMuted} />
+        <TextInput
+          style={styles.searchInput}
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Rechercher un membre..."
+          placeholderTextColor={colors.placeholder}
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+          </TouchableOpacity>
+        )}
+      </View>
       <FlatList
-        data={members}
+        data={filtered}
         keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={[styles.list, members.length === 0 && styles.listFlex]}
+        contentContainerStyle={[styles.list, filtered.length === 0 && styles.listFlex]}
         refreshControl={
           <RefreshControl
             refreshing={isFetching && !isLoading}
@@ -131,8 +157,8 @@ export default function MembersScreen({ navigation, route }: Props) {
         ListEmptyComponent={
           <EmptyState
             icon="people-outline"
-            title="Aucun membre"
-            subtitle="Ajoutez des membres avec le bouton en haut à droite."
+            title={search ? 'Aucun résultat' : 'Aucun membre'}
+            subtitle={search ? `Aucun membre ne correspond à "${search}"` : 'Ajoutez des membres avec le bouton en haut à droite.'}
           />
         }
         renderItem={({ item }) => (
@@ -192,7 +218,7 @@ export default function MembersScreen({ navigation, route }: Props) {
                 title="Ajouter"
                 onPress={() => {
                   if (!addUsername.trim()) {
-                    Alert.alert('Requis', "Le nom d'utilisateur est obligatoire.");
+                    toastWarning("Le nom d'utilisateur est obligatoire.");
                     return;
                   }
                   addMutation.mutate();
@@ -216,6 +242,28 @@ function roleBadge(role: string): 'primary' | 'secondary' | 'neutral' {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    margin: spacing.md,
+    marginBottom: spacing.sm,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text,
+    paddingVertical: 0,
+  },
   list: { padding: spacing.md, gap: spacing.sm },
   listFlex: { flex: 1 },
   card: {

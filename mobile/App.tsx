@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import AppNavigator from './src/navigation/AppNavigator';
+import { ToastProvider } from './src/components/Toast';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,7 +23,9 @@ export default function App() {
         <QueryClientProvider client={queryClient}>
           <NavigationContainer>
             <StatusBar style="light" />
-            <AppNavigator />
+            <ToastProvider>
+              <AppNavigator />
+            </ToastProvider>
           </NavigationContainer>
         </QueryClientProvider>
       </SafeAreaProvider>

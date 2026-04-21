@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +23,7 @@ export default function CategoryFormScreen({ navigation, route }: Props) {
   const categoryId = (route.params as { categoryId?: number }).categoryId;
   const isEdit = categoryId !== undefined;
   const qc = useQueryClient();
+  const { error: toastError, warning: toastWarning } = useToast();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -58,16 +59,16 @@ export default function CategoryFormScreen({ navigation, route }: Props) {
       navigation.goBack();
     },
     onError: (err: any) =>
-      Alert.alert('Erreur', err?.response?.data?.message ?? 'Une erreur est survenue.'),
+      toastError(err?.response?.data?.message ?? 'Une erreur est survenue.'),
   });
 
   const handleSubmit = () => {
     if (!name.trim()) {
-      Alert.alert('Champ requis', 'Le nom est obligatoire.');
+      toastWarning('Le nom est obligatoire.');
       return;
     }
     if (maxDays && isNaN(parseInt(maxDays, 10))) {
-      Alert.alert('Valeur invalide', 'Les jours de consommation max doivent être un nombre.');
+      toastWarning('Les jours de consommation max doivent être un nombre.');
       return;
     }
     mutation.mutate();
