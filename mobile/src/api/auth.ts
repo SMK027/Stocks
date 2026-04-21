@@ -23,7 +23,7 @@ export const changePassword = async (currentPassword: string, newPassword: strin
   });
 };
 
-export const refreshToken = async (): Promise<AuthResponse> => {
-  const res = await apiClient.post<AuthResponse>('/auth/refresh');
+export const refreshToken = async (): Promise<{ success: boolean; token: string }> => {
+  const res = await apiClient.post<{ success: boolean; token: string }>('/auth/refresh');
   return res.data;
 };
