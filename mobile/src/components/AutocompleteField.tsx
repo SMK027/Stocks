@@ -5,7 +5,7 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, typography, borderRadius, shadows } from '../theme';
@@ -129,12 +129,14 @@ export default function AutocompleteField({
               <Text style={styles.emptyText}>{emptyMessage}</Text>
             </View>
           ) : (
-            <FlatList
-              data={filtered}
-              keyExtractor={(item) => String(item.id)}
+            <ScrollView
               keyboardShouldPersistTaps="handled"
-              renderItem={({ item, index }) => (
+              nestedScrollEnabled
+              showsVerticalScrollIndicator={filtered.length > MAX_VISIBLE}
+            >
+              {filtered.map((item, index) => (
                 <TouchableOpacity
+                  key={String(item.id)}
                   style={[
                     styles.item,
                     item.id === value && styles.itemSelected,
@@ -153,8 +155,8 @@ export default function AutocompleteField({
                     {item.name}
                   </Text>
                 </TouchableOpacity>
-              )}
-            />
+              ))}
+            </ScrollView>
           )}
         </View>
       )}
