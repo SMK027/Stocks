@@ -25,6 +25,12 @@ use App\Controllers\InventoryController;
 use App\Controllers\ProfileController;
 use App\Controllers\DashboardController;
 use App\Controllers\PasswordResetController;
+use App\Controllers\Api\AuthApiController;
+use App\Controllers\Api\SpaceApiController;
+use App\Controllers\Api\CategoryApiController;
+use App\Controllers\Api\LocationApiController;
+use App\Controllers\Api\ProductApiController;
+use App\Controllers\Api\InventoryApiController;
 
 // Démarrer la session
 Session::start();
@@ -121,6 +127,64 @@ $router->post('/spaces/{spaceId}/inventory/{id}/delete', InventoryController::cl
 $router->post('/spaces/{spaceId}/inventory/{id}/casse', InventoryController::class, 'casse');
 $router->post('/spaces/{spaceId}/inventory/{id}/uncasse', InventoryController::class, 'uncasse');
 $router->post('/spaces/{spaceId}/inventory/{id}/decrease', InventoryController::class, 'decrease');
+
+// ============================================================
+// Routes API REST — JWT uniquement (sauf /api/auth/login)
+// ============================================================
+
+// Authentification (POST /api/auth/login = publique)
+$router->post('/api/auth/login', AuthApiController::class, 'login');
+$router->post('/api/auth/refresh', AuthApiController::class, 'refresh');
+$router->get('/api/auth/me', AuthApiController::class, 'me');
+$router->put('/api/auth/me', AuthApiController::class, 'updateMe');
+$router->post('/api/auth/password', AuthApiController::class, 'changePassword');
+
+// Espaces
+$router->get('/api/spaces', SpaceApiController::class, 'index');
+$router->post('/api/spaces', SpaceApiController::class, 'store');
+$router->get('/api/spaces/{id}', SpaceApiController::class, 'show');
+$router->put('/api/spaces/{id}', SpaceApiController::class, 'update');
+$router->delete('/api/spaces/{id}', SpaceApiController::class, 'destroy');
+
+// Membres d'un espace
+$router->get('/api/spaces/{id}/members', SpaceApiController::class, 'members');
+$router->post('/api/spaces/{id}/members', SpaceApiController::class, 'addMember');
+$router->put('/api/spaces/{id}/members/{userId}', SpaceApiController::class, 'updateMember');
+$router->delete('/api/spaces/{id}/members/{userId}', SpaceApiController::class, 'removeMember');
+
+// Catégories
+$router->get('/api/spaces/{spaceId}/categories', CategoryApiController::class, 'index');
+$router->post('/api/spaces/{spaceId}/categories', CategoryApiController::class, 'store');
+$router->get('/api/spaces/{spaceId}/categories/{id}', CategoryApiController::class, 'show');
+$router->put('/api/spaces/{spaceId}/categories/{id}', CategoryApiController::class, 'update');
+$router->delete('/api/spaces/{spaceId}/categories/{id}', CategoryApiController::class, 'destroy');
+
+// Emplacements
+$router->get('/api/spaces/{spaceId}/locations', LocationApiController::class, 'index');
+$router->post('/api/spaces/{spaceId}/locations', LocationApiController::class, 'store');
+$router->get('/api/spaces/{spaceId}/locations/{id}', LocationApiController::class, 'show');
+$router->put('/api/spaces/{spaceId}/locations/{id}', LocationApiController::class, 'update');
+$router->delete('/api/spaces/{spaceId}/locations/{id}', LocationApiController::class, 'destroy');
+
+// Produits
+$router->get('/api/spaces/{spaceId}/products', ProductApiController::class, 'index');
+$router->post('/api/spaces/{spaceId}/products', ProductApiController::class, 'store');
+$router->get('/api/spaces/{spaceId}/products/{id}', ProductApiController::class, 'show');
+$router->put('/api/spaces/{spaceId}/products/{id}', ProductApiController::class, 'update');
+$router->delete('/api/spaces/{spaceId}/products/{id}', ProductApiController::class, 'destroy');
+
+// Inventaire (routes statiques AVANT les routes paramétrées)
+$router->get('/api/spaces/{spaceId}/inventory', InventoryApiController::class, 'index');
+$router->post('/api/spaces/{spaceId}/inventory', InventoryApiController::class, 'store');
+$router->get('/api/spaces/{spaceId}/inventory/expired', InventoryApiController::class, 'expired');
+$router->get('/api/spaces/{spaceId}/inventory/expiring', InventoryApiController::class, 'expiring');
+$router->get('/api/spaces/{spaceId}/inventory/casse', InventoryApiController::class, 'casse');
+$router->get('/api/spaces/{spaceId}/inventory/{id}', InventoryApiController::class, 'show');
+$router->put('/api/spaces/{spaceId}/inventory/{id}', InventoryApiController::class, 'update');
+$router->delete('/api/spaces/{spaceId}/inventory/{id}', InventoryApiController::class, 'destroy');
+$router->post('/api/spaces/{spaceId}/inventory/{id}/decrease', InventoryApiController::class, 'decrease');
+$router->post('/api/spaces/{spaceId}/inventory/{id}/casse', InventoryApiController::class, 'markCasse');
+$router->post('/api/spaces/{spaceId}/inventory/{id}/uncasse', InventoryApiController::class, 'unmarkCasse');
 
 // Dispatcher la requête
 $router->dispatch();
