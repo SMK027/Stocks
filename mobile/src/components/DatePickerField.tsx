@@ -4,12 +4,14 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
   Platform,
 } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, typography, borderRadius } from '../theme';
+import { colors, spacing, typography, borderRadius, shadows } from '../theme';
 
 interface Props {
   label: string;
@@ -24,7 +26,6 @@ interface Props {
   maxDate?: Date;
 }
 
-/** Convertit une chaîne YYYY-MM-DD en Date locale (midi, évite les décalages UTC) */
 function parseDate(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d, 12, 0, 0);
@@ -47,9 +48,7 @@ export default function DatePickerField({
   minDate,
   maxDate,
 }: Props) {
-  const [visible, setVisible] = useState(false);
-  // Utilisé sur iOS pour stocker la sélection temporaire avant confirmation
-  const [tempDate, setTempDate] = useState<Date>(new Date());
+  const [expanded, setExpanded] = useState(false);
 
   const currentDate = value ? parseDate(value) : new Date();
 
@@ -61,30 +60,32 @@ export default function DatePickerField({
       })
     : null;
 
-  const openPicker = () => {
-    setTempDate(value ? parseDate(value) : new Date());
-    setVisible(true);
+  // ── Android : API impérative, aucun composant dans le tree ───────────────
+  const openAndroid = () => {
+    DateTimePickerAndroid.open({
+      value: currentDate,
+      mode: 'date',
+      display: 'default',
+      minimumDate: minDate,
+      maximumDate: maxDate,
+      onChange: (event, date) => {
+        if (event.type === 'set' && date) onChange(toIso(date));
+      },
+    });
   };
 
-  // ─── Android ─────────────────────────────────────────────────────────────
-  const handleAndroid = (event: DateTimePickerEvent, date?: Date) => {
-    setVisible(false);
-    if (event.type === 'set' && date) {
-      onChange(toIso(date));
+  // ── iOS : spinner inline ──────────────────────────────────────────────────
+  const handleIOS = (_event: DateTimePickerEvent, date?: Date) => {
+    if (date) onChange(toIso(date));
+  };
+
+  const handlePress = () => {
+    if (Platform.OS === 'android') {
+      openAndroid();
+    } else {
+      setExpanded((v) => !v);
     }
   };
-
-  // ─── iOS ─────────────────────────────────────────────────────────────────
-  const handleIOS = (_event: DateTimePickerEvent, date?: Date) => {
-    if (date) setTempDate(date);
-  };
-
-  const confirmIOS = () => {
-    onChange(toIso(tempDate));
-    setVisible(false);
-  };
-
-  const cancelIOS = () => setVisible(false);
 
   return (
     <View>
@@ -92,21 +93,29 @@ export default function DatePickerField({
 
       <View style={styles.row}>
         <TouchableOpacity
-          style={styles.picker}
-          onPress={openPicker}
+          style={[styles.picker, expanded && styles.pickerActive]}
+          onPress={handlePress}
           activeOpacity={0.75}
         >
-          <Ionicons name={icon} size={18} color={colors.textSecondary} />
+          <Ionicons
+            name={icon}
+            size={18}
+            color={expanded ? colors.primary : colors.textSecondary}
+          />
           <Text style={[styles.pickerText, !displayLabel && styles.placeholder]}>
             {displayLabel ?? placeholder}
           </Text>
-          <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+          <Ionicons
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+            size={16}
+            color={expanded ? colors.primary : colors.textMuted}
+          />
         </TouchableOpacity>
 
         {optional && value ? (
           <TouchableOpacity
             style={styles.clearBtn}
-            onPress={() => onChange('')}
+            onPress={() => { onChange(''); setExpanded(false); }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Ionicons name="close-circle" size={22} color={colors.textMuted} />
@@ -114,46 +123,23 @@ export default function DatePickerField({
         ) : null}
       </View>
 
-      {/* ── Android : dialog natif ───────────────────────────────────────── */}
-      {Platform.OS === 'android' && visible && (
-        <DateTimePicker
-          value={currentDate}
-          mode="date"
-          display="default"
-          onChange={handleAndroid}
-          minimumDate={minDate}
-          maximumDate={maxDate}
-        />
-      )}
-
-      {/* ── iOS : spinner dans un modal ──────────────────────────────────── */}
-      {Platform.OS === 'ios' && (
-        <Modal visible={visible} transparent animationType="slide">
-          <View style={styles.overlay}>
-            <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={cancelIOS} />
-            <View style={styles.sheet}>
-              <View style={styles.sheetHeader}>
-                <TouchableOpacity onPress={cancelIOS} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.btnCancel}>Annuler</Text>
-                </TouchableOpacity>
-                <Text style={styles.sheetTitle}>{label}</Text>
-                <TouchableOpacity onPress={confirmIOS} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                  <Text style={styles.btnDone}>OK</Text>
-                </TouchableOpacity>
-              </View>
-              <DateTimePicker
-                value={tempDate}
-                mode="date"
-                display="spinner"
-                onChange={handleIOS}
-                minimumDate={minDate}
-                maximumDate={maxDate}
-                locale="fr-FR"
-                style={styles.spinner}
-              />
-            </View>
-          </View>
-        </Modal>
+      {/* ── iOS : spinner affiché en inline ─────────────────────────────── */}
+      {Platform.OS === 'ios' && expanded && (
+        <View style={styles.inlineSpinner}>
+          <DateTimePicker
+            value={currentDate}
+            mode="date"
+            display="spinner"
+            onChange={handleIOS}
+            minimumDate={minDate}
+            maximumDate={maxDate}
+            locale="fr-FR"
+            style={styles.spinner}
+          />
+          <TouchableOpacity style={styles.doneBtn} onPress={() => setExpanded(false)}>
+            <Text style={styles.doneBtnText}>Valider</Text>
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -182,50 +168,40 @@ const styles = StyleSheet.create({
     height: 50,
     gap: spacing.sm,
   },
+  pickerActive: {
+    borderColor: colors.primary,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
   pickerText: { flex: 1, ...typography.body, color: colors.text },
   placeholder: { color: colors.placeholder },
   clearBtn: {
     padding: spacing.xs,
   },
-  // iOS modal
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  sheet: {
+  inlineSpinner: {
     backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: spacing.xl,
+    borderWidth: 1.5,
+    borderTopWidth: 0,
+    borderColor: colors.primary,
+    borderBottomLeftRadius: borderRadius.md,
+    borderBottomRightRadius: borderRadius.md,
+    overflow: 'hidden',
+    ...shadows.sm,
   },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  spinner: {
+    width: '100%',
+  },
+  doneBtn: {
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingVertical: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginHorizontal: spacing.md,
   },
-  sheetTitle: {
-    ...typography.bodySmall,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  btnCancel: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  btnDone: {
+  doneBtnText: {
     ...typography.body,
     color: colors.primary,
     fontWeight: '600',
   },
-  spinner: {
-    alignSelf: 'stretch',
-  },
 });
+
