@@ -22,6 +22,7 @@ import { colors, spacing, typography, borderRadius } from '../../theme';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import LoadingView from '../../components/LoadingView';
+import DatePickerField from '../../components/DatePickerField';
 
 type Props = NativeStackScreenProps<SpacesStackParamList, 'InventoryCreate' | 'InventoryEdit'>;
 
@@ -175,20 +176,21 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
             leftIcon="layers-outline"
           />
 
-          <Input
+          <DatePickerField
             label="Date de mise en stock"
             value={stockDate}
-            onChangeText={setStockDate}
-            placeholder="AAAA-MM-JJ"
-            leftIcon="calendar-outline"
+            onChange={setStockDate}
+            icon="calendar-outline"
+            maxDate={new Date()}
           />
 
-          <Input
-            label="Date d'expiration"
+          <DatePickerField
+            label="Date limite de consommation"
             value={expiryDate}
-            onChangeText={setExpiryDate}
-            placeholder="AAAA-MM-JJ (optionnel)"
-            leftIcon="time-outline"
+            onChange={setExpiryDate}
+            placeholder="Sélectionner (optionnel)"
+            optional
+            icon="time-outline"
           />
 
           <Button
