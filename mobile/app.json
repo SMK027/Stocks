@@ -34,6 +34,7 @@
     "plugins": [
       "expo-asset",
       "expo-system-ui",
+      "expo-navigation-bar",
       "@react-native-community/datetimepicker"
     ]
   }
