@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
-  Alert,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
 } from 'react-native';
 import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ionicons } from '@expo/vector-icons';
 import { SpacesStackParamList } from '../../types';
 import { upsertInventoryItem, updateInventoryItem, getInventoryItem } from '../../api/inventory';
 import { getProducts } from '../../api/products';
 import { getLocations } from '../../api/locations';
-import { colors, spacing, typography, borderRadius } from '../../theme';
+import { colors, spacing } from '../../theme';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import LoadingView from '../../components/LoadingView';
 import DatePickerField from '../../components/DatePickerField';
+import AutocompleteField from '../../components/AutocompleteField';
 
 type Props = NativeStackScreenProps<SpacesStackParamList, 'InventoryCreate' | 'InventoryEdit'>;
 
@@ -102,39 +99,6 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
 
   if (isEdit && isLoading) return <LoadingView />;
 
-  const selectedProduct = products.find((p) => p.id === productId);
-  const selectedLocation = locations.find((l) => l.id === locationId);
-
-  const showProductPicker = () => {
-    if (products.length === 0) {
-      Alert.alert('Aucun produit', "Créez d'abord des produits dans cet espace.");
-      return;
-    }
-    Alert.alert(
-      'Choisir un produit',
-      undefined,
-      [
-        ...products.map((p) => ({ text: p.name, onPress: () => setProductId(p.id) })),
-        { text: 'Annuler', style: 'cancel' as const },
-      ],
-    );
-  };
-
-  const showLocationPicker = () => {
-    if (locations.length === 0) {
-      Alert.alert('Aucun emplacement', "Créez d'abord des emplacements dans cet espace.");
-      return;
-    }
-    Alert.alert(
-      'Choisir un emplacement',
-      undefined,
-      [
-        ...locations.map((l) => ({ text: l.name, onPress: () => setLocationId(l.id) })),
-        { text: 'Annuler', style: 'cancel' as const },
-      ],
-    );
-  };
-
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView
@@ -143,29 +107,25 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
-          {/* Sélecteur produit */}
-          <View>
-            <Text style={styles.label}>Produit *</Text>
-            <TouchableOpacity style={styles.picker} onPress={showProductPicker} activeOpacity={0.75}>
-              <Ionicons name="barcode-outline" size={18} color={colors.textSecondary} />
-              <Text style={[styles.pickerText, !selectedProduct && styles.pickerPlaceholder]}>
-                {selectedProduct ? selectedProduct.name : 'Sélectionner un produit'}
-              </Text>
-              <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
-            </TouchableOpacity>
-          </View>
+          <AutocompleteField
+            label="Produit *"
+            items={products}
+            value={productId}
+            onChange={setProductId}
+            placeholder="Rechercher un produit…"
+            icon="barcode-outline"
+            emptyMessage="Aucun produit – créez-en d'abord dans cet espace."
+          />
 
-          {/* Sélecteur emplacement */}
-          <View>
-            <Text style={styles.label}>Emplacement *</Text>
-            <TouchableOpacity style={styles.picker} onPress={showLocationPicker} activeOpacity={0.75}>
-              <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
-              <Text style={[styles.pickerText, !selectedLocation && styles.pickerPlaceholder]}>
-                {selectedLocation ? selectedLocation.name : 'Sélectionner un emplacement'}
-              </Text>
-              <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
-            </TouchableOpacity>
-          </View>
+          <AutocompleteField
+            label="Emplacement *"
+            items={locations}
+            value={locationId}
+            onChange={setLocationId}
+            placeholder="Rechercher un emplacement…"
+            icon="location-outline"
+            emptyMessage="Aucun emplacement – créez-en d'abord dans cet espace."
+          />
 
           <Input
             label="Quantité *"
@@ -209,18 +169,4 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, gap: spacing.md },
-  label: { ...typography.label, color: colors.text, marginBottom: spacing.xs },
-  picker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    height: 50,
-    gap: spacing.sm,
-  },
-  pickerText: { flex: 1, ...typography.body, color: colors.text },
-  pickerPlaceholder: { color: colors.placeholder },
 });
