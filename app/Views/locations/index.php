@@ -46,8 +46,8 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                 <tbody id="locations-tbody">
                     <?php foreach ($locations as $loc): ?>
                         <tr>
-                            <td><strong><?= e($loc['name']) ?></strong></td>
-                            <td class="text-muted"><?= e($loc['description'] ?? '—') ?></td>
+                            <td data-label="Nom"><strong><?= e($loc['name']) ?></strong></td>
+                            <td data-label="Description" class="text-muted"><?= e($loc['description'] ?? '—') ?></td>
                             <?php if ($canManage): ?>
                                 <td class="text-right">
                                     <div class="btn-group">

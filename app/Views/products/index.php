@@ -46,8 +46,8 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                 <tbody id="products-tbody">
                     <?php foreach ($products as $p): ?>
                         <tr>
-                            <td><strong><?= e($p['name']) ?></strong></td>
-                            <td>
+                            <td data-label="Nom"><strong><?= e($p['name']) ?></strong></td>
+                            <td data-label="Catégories">
                                 <?php if ($p['category_names']): ?>
                                     <?php foreach (explode(', ', $p['category_names']) as $cat): ?>
                                         <span class="badge badge-secondary"><?= e($cat) ?></span>

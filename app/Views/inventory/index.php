@@ -110,14 +110,14 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
                         }
                         ?>
                         <tr data-status="<?= $rowStatus ?>">
-                            <td><strong><?= e($item['product_name']) ?></strong></td>
-                            <td><span class="badge badge-info"><?= e($item['location_name']) ?></span></td>
-                            <td><strong><?= (int)$item['quantity'] ?></strong></td>
-                            <td class="text-small"><?= e(date('d/m/Y', strtotime($item['stock_date']))) ?></td>
-                            <td class="text-small">
+                            <td data-label="Produit"><strong><?= e($item['product_name']) ?></strong></td>
+                            <td data-label="Emplacement"><span class="badge badge-info"><?= e($item['location_name']) ?></span></td>
+                            <td data-label="Qté"><strong><?= (int)$item['quantity'] ?></strong></td>
+                            <td data-label="Stocké le" class="text-small"><?= e(date('d/m/Y', strtotime($item['stock_date']))) ?></td>
+                            <td data-label="Expire le" class="text-small">
                                 <?= $item['expiry_date'] ? e(date('d/m/Y', strtotime($item['expiry_date']))) : '—' ?>
                             </td>
-                            <td>
+                            <td data-label="Statut">
                                 <?php if ($expiryBadge): ?>
                                     <span class="badge <?= $expiryBadge ?>"><?= e($expiryStatus) ?></span>
                                 <?php else: ?>
@@ -184,11 +184,11 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
                     <tbody>
                         <?php foreach ($casseItems as $cItem): ?>
                             <tr>
-                                <td><strong><?= e($cItem['product_name']) ?></strong></td>
-                                <td><span class="badge badge-info"><?= e($cItem['location_name']) ?></span></td>
-                                <td><strong><?= (int)$cItem['quantity'] ?></strong></td>
-                                <td class="text-small"><?= e(date('d/m/Y', strtotime($cItem['stock_date']))) ?></td>
-                                <td class="text-small">
+                                <td data-label="Produit"><strong><?= e($cItem['product_name']) ?></strong></td>
+                                <td data-label="Emplacement"><span class="badge badge-info"><?= e($cItem['location_name']) ?></span></td>
+                                <td data-label="Qté"><strong><?= (int)$cItem['quantity'] ?></strong></td>
+                                <td data-label="Stocké le" class="text-small"><?= e(date('d/m/Y', strtotime($cItem['stock_date']))) ?></td>
+                                <td data-label="Expire le" class="text-small">
                                     <?= $cItem['expiry_date'] ? e(date('d/m/Y', strtotime($cItem['expiry_date']))) : '—' ?>
                                 </td>
                                 <?php if ($canManage): ?>

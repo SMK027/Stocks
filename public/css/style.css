@@ -158,6 +158,20 @@ p { margin-bottom: 1rem; }
     border-radius: 1px;
 }
 
+/* Animation burger → X */
+.navbar-toggle.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.navbar-toggle.active span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.navbar-toggle.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
 .navbar-menu {
     display: flex;
     align-items: center;
@@ -1238,21 +1252,26 @@ select.form-control {
     }
 
     .navbar-menu {
-        display: none;
+        display: block;
         position: absolute;
         top: var(--navbar-height);
         left: 0;
         right: 0;
         background: var(--white);
         flex-direction: column;
-        padding: 1rem;
+        padding: 0 1rem;
         box-shadow: var(--shadow);
         gap: 0.5rem;
         z-index: 999;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
     }
 
     .navbar-menu.open {
         display: flex;
+        max-height: 400px;
+        padding: 1rem;
     }
 
     .navbar-user {
@@ -1300,12 +1319,12 @@ select.form-control {
         text-align: center;
     }
 
-    .btn-group {
+    /* Seuls les groupes de boutons de navigation s'étirent */
+    .page-header .btn-group {
         width: 100%;
-        justify-content: stretch;
     }
 
-    .btn-group .btn {
+    .page-header .btn-group .btn {
         flex: 1;
     }
 }
@@ -1424,8 +1443,14 @@ hr {
     }
 
     .table .btn-group {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: 0.25rem;
+        width: auto;
+    }
+
+    .table .btn-group .btn {
+        flex: 0 0 auto;
     }
 
     .card-grid {
@@ -1767,4 +1792,198 @@ hr {
     color: var(--gray);
     display: none;
     font-size: 0.9rem;
+}
+
+/* -----------------------------------------------------------
+   Responsive — Tables en mode carte (≤ 560px)
+   ----------------------------------------------------------- */
+@media (max-width: 560px) {
+    /* Transformer chaque ligne en carte */
+    .table-responsive {
+        overflow-x: visible;
+    }
+
+    .table,
+    .table tbody,
+    .table tr,
+    .table td {
+        display: block;
+        width: 100%;
+    }
+
+    .table thead {
+        display: none;
+    }
+
+    .table tbody tr {
+        border: 1px solid var(--gray-light);
+        border-radius: var(--border-radius);
+        margin-bottom: 0.75rem;
+        background: var(--white);
+        overflow: hidden;
+    }
+
+    .table td {
+        position: relative;
+        padding: 0.5rem 0.75rem 0.5rem 42%;
+        min-height: 2.5rem;
+        border-bottom: 1px solid var(--gray-lighter);
+        font-size: 0.85rem;
+        text-align: left;
+        border-radius: 0;
+    }
+
+    .table td:last-child {
+        border-bottom: none;
+    }
+
+    /* Étiquette auto depuis data-label */
+    .table td[data-label]::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: 600;
+        font-size: 0.7rem;
+        color: var(--gray);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+        width: 38%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Cellule sans étiquette (actions) */
+    .table td:not([data-label]) {
+        padding-left: 0.75rem;
+        text-align: right;
+    }
+
+    /* Groupes de boutons inline dans la cellule actions */
+    .table td .btn-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        width: auto;
+        justify-content: flex-end;
+    }
+
+    .table td .btn-group .btn {
+        flex: 0 0 auto;
+    }
+
+    /* Empêcher le double hover sur card-link > card */
+    .table tr:hover {
+        background: transparent;
+    }
+}
+
+/* -----------------------------------------------------------
+   Responsive — Améliorations générales mobile
+   ----------------------------------------------------------- */
+@media (max-width: 768px) {
+    /* Barre de filtres : scroll horizontal invisible */
+    .search-filters {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+    }
+
+    .search-filters::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Navbar : cibles tactiles (44px min) */
+    .navbar-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Boutons : taille tactile minimale */
+    .btn {
+        min-height: 44px;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+    }
+
+    /* Liste des espaces : 2 colonnes sur mobile paysage */
+    .card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    /* Réduire le padding page-header */
+    .page-header {
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Stat cards : 2 par ligne sur mobile */
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .stat-card {
+        min-width: 0;
+    }
+}
+
+/* -----------------------------------------------------------
+   Responsive — Petit mobile (≤ 480px)
+   ----------------------------------------------------------- */
+@media (max-width: 480px) {
+    /* Modal pleine largeur */
+    .modal {
+        padding: 1.5rem 1.25rem;
+        width: calc(100% - 1.5rem);
+    }
+
+    /* Toast pleine largeur */
+    .toast-container {
+        left: 0.75rem;
+        right: 0.75rem;
+    }
+
+    .toast {
+        max-width: 100%;
+    }
+
+    /* Stat cards : 1 par ligne sur très petit écran */
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    /* Supprimer le padding sur les grandes cartes stats */
+    .stat-card {
+        padding: 1rem;
+    }
+
+    /* h1 plus compact */
+    h1 {
+        font-size: 1.35rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.25rem;
+    }
+
+    /* Boutons page-header : colonne sur très petit écran */
+    .page-header .btn-group {
+        flex-direction: column;
+    }
+
+    .page-header .btn-group .btn {
+        flex: 0 0 auto;
+    }
+
+    /* Grille espaces : 1 colonne */
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
 }

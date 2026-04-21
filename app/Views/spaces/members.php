@@ -52,9 +52,9 @@
             <tbody>
                 <?php foreach ($members as $member): ?>
                     <tr>
-                        <td><strong><?= e($member['username']) ?></strong></td>
-                        <td><?= e($member['email']) ?></td>
-                        <td>
+                        <td data-label="Utilisateur"><strong><?= e($member['username']) ?></strong></td>
+                        <td data-label="Email"><?= e($member['email']) ?></td>
+                        <td data-label="Rôle">
                             <form method="POST" action="/spaces/<?= (int)$space['id'] ?>/members/<?= (int)$member['id'] ?>/update" class="d-flex gap-1">
                                 <?= csrf_field() ?>
                                 <select name="role" class="form-control" style="width:auto;min-width:180px;">
@@ -68,7 +68,7 @@
                                 <button type="submit" class="btn btn-sm btn-outline" title="Modifier le rôle"><i class="bi bi-check-lg"></i></button>
                             </form>
                         </td>
-                        <td class="text-small text-muted"><?= e(date('d/m/Y', strtotime($member['joined_at']))) ?></td>
+                        <td data-label="Depuis" class="text-small text-muted"><?= e(date('d/m/Y', strtotime($member['joined_at']))) ?></td>
                         <td class="text-right">
                             <?php if ((int)$member['id'] !== current_user_id()): ?>
                                 <form method="POST" action="/spaces/<?= (int)$space['id'] ?>/members/<?= (int)$member['id'] ?>/remove" onsubmit="return confirm('Retirer ce membre ?')">

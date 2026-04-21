@@ -47,9 +47,9 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                 <tbody id="categories-tbody">
                     <?php foreach ($categories as $cat): ?>
                         <tr>
-                            <td><strong><?= e($cat['name']) ?></strong></td>
-                            <td class="text-muted"><?= e($cat['description'] ?? '—') ?></td>
-                            <td>
+                            <td data-label="Nom"><strong><?= e($cat['name']) ?></strong></td>
+                            <td data-label="Description" class="text-muted"><?= e($cat['description'] ?? '—') ?></td>
+                            <td data-label="Durée max.">
                                 <?php if ($cat['max_consumption_days']): ?>
                                     <span class="badge badge-info"><?= (int)$cat['max_consumption_days'] ?> j</span>
                                 <?php else: ?>

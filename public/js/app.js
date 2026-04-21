@@ -8,13 +8,34 @@ document.addEventListener('DOMContentLoaded', function () {
     const navMenu = document.querySelector('.navbar-menu');
     if (navToggle && navMenu) {
         navToggle.addEventListener('click', function () {
-            navMenu.classList.toggle('open');
+            const isOpen = navMenu.classList.toggle('open');
+            navToggle.classList.toggle('active', isOpen);
+            navToggle.setAttribute('aria-expanded', isOpen);
         });
         // Fermer le menu au clic en dehors
         document.addEventListener('click', function (e) {
             if (!navToggle.contains(e.target) && !navMenu.contains(e.target)) {
                 navMenu.classList.remove('open');
+                navToggle.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
             }
+        });
+        // Fermer le menu sur la touche Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && navMenu.classList.contains('open')) {
+                navMenu.classList.remove('open');
+                navToggle.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                navToggle.focus();
+            }
+        });
+        // Fermer le menu quand un lien est cliqué
+        navMenu.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function () {
+                navMenu.classList.remove('open');
+                navToggle.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+            });
         });
     }
 
