@@ -5,8 +5,8 @@ export interface User {
   username: string;
   email: string;
   global_role: string;
-  first_name?: string;
-  last_name?: string;
+  firstname?: string;
+  lastname?: string;
   daily_digest?: boolean;
 }
 

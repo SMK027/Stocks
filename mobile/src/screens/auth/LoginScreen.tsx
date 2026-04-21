@@ -17,12 +17,12 @@ import Input from '../../components/Input';
 import Button from '../../components/Button';
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { setAuth } = useAuthStore();
 
   const loginMutation = useMutation({
-    mutationFn: () => login(username.trim(), password),
+    mutationFn: () => login(email.trim(), password),
     onSuccess: async (data) => {
       await setAuth(data.token, data.user);
     },
@@ -33,7 +33,7 @@ export default function LoginScreen() {
     },
   });
 
-  const canSubmit = username.trim().length > 0 && password.length > 0;
+  const canSubmit = email.trim().length > 0 && password.length > 0;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -58,13 +58,16 @@ export default function LoginScreen() {
           {/* Formulaire */}
           <View style={styles.card}>
             <Input
-              label="Nom d'utilisateur"
-              value={username}
-              onChangeText={setUsername}
+              label="Adresse e-mail"
+              value={email}
+              onChangeText={setEmail}
               autoCapitalize="none"
               autoCorrect={false}
-              placeholder="Votre identifiant"
-              leftIcon="person-outline"
+              autoComplete="email"
+              keyboardType="email-address"
+              textContentType="emailAddress"
+              placeholder="Votre adresse e-mail"
+              leftIcon="mail-outline"
               returnKeyType="next"
             />
             <Input
@@ -72,16 +75,17 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
+              autoComplete="current-password"
+              textContentType="password"
               placeholder="Votre mot de passe"
               leftIcon="lock-closed-outline"
               returnKeyType="done"
-              onSubmitEditing={() => canSubmit && loginMutation.mutate()}
+              onSubmitEditing={() => loginMutation.mutate()}
             />
             <Button
               title="Se connecter"
               onPress={() => loginMutation.mutate()}
               loading={loginMutation.isPending}
-              disabled={!canSubmit}
               fullWidth
               icon="log-in-outline"
               style={styles.submitBtn}

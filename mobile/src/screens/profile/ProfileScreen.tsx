@@ -28,8 +28,8 @@ export default function ProfileScreen() {
 
   // Champs profil
   const [email, setEmail] = useState(user?.email ?? '');
-  const [firstName, setFirstName] = useState(user?.first_name ?? '');
-  const [lastName, setLastName] = useState(user?.last_name ?? '');
+  const [firstName, setFirstName] = useState(user?.firstname ?? '');
+  const [lastName, setLastName] = useState(user?.lastname ?? '');
   const [dailyDigest, setDailyDigest] = useState(user?.daily_digest ?? false);
 
   // Champs mot de passe
@@ -45,8 +45,8 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (fresh) {
       setEmail(fresh.email ?? '');
-      setFirstName(fresh.first_name ?? '');
-      setLastName(fresh.last_name ?? '');
+      setFirstName(fresh.firstname ?? '');
+      setLastName(fresh.lastname ?? '');
       setDailyDigest(fresh.daily_digest ?? false);
       setUser(fresh);
     }
@@ -56,8 +56,8 @@ export default function ProfileScreen() {
     mutationFn: () =>
       updateMe({
         email: email.trim(),
-        first_name: firstName.trim() || undefined,
-        last_name: lastName.trim() || undefined,
+        firstname: firstName.trim() || undefined,
+        lastname: lastName.trim() || undefined,
         daily_digest: dailyDigest,
       }),
     onSuccess: (updated) => {
