@@ -22,7 +22,7 @@ export default function App() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <NavigationContainer>
-            <StatusBar style="light" />
+            <StatusBar style="light" translucent backgroundColor="transparent" />
             <ToastProvider>
               <AppNavigator />
             </ToastProvider>

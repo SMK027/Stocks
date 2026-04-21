@@ -11,12 +11,18 @@
       "resizeMode": "contain",
       "backgroundColor": "#2563eb"
     },
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "translucent": true,
+      "backgroundColor": "#00000000"
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2563eb"
       },
-      "package": "fr.leofranz.stocks"
+      "package": "fr.leofranz.stocks",
+      "softwareKeyboardLayoutMode": "resize"
     },
     "ios": {
       "supportsTablet": true,
@@ -27,6 +33,7 @@
     },
     "plugins": [
       "expo-asset",
+      "expo-system-ui",
       "@react-native-community/datetimepicker"
     ]
   }
