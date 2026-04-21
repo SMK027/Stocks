@@ -13,7 +13,14 @@
         <a href="/spaces/create" class="btn btn-primary">Créer mon premier espace</a>
     </div>
 <?php else: ?>
-    <div class="card-grid">
+    <div class="search-bar-card">
+        <i class="bi bi-search search-bar-icon"></i>
+        <input type="text"
+               class="search-input js-search-input"
+               data-search-for="spaces-grid"
+               placeholder="Rechercher un espace…">
+    </div>
+    <div class="card-grid" id="spaces-grid">
         <?php foreach ($spaces as $s): ?>
             <a href="/spaces/<?= (int)$s['id'] ?>" class="card-link">
                 <div class="card">
@@ -28,4 +35,5 @@
             </a>
         <?php endforeach; ?>
     </div>
+    <p class="search-no-results" id="spaces-grid-no-results"><i class="bi bi-search"></i> Aucun espace ne correspond à votre recherche.</p>
 <?php endif; ?>

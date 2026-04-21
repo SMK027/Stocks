@@ -38,7 +38,37 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
         <?php endif; ?>
     </div>
 <?php else: ?>
+    <?php
+    $expiredIds   = array_column($expired   ?? [], 'id');
+    $expiringIds  = array_column($expiringSoon ?? [], 'id');
+    $countAll      = count($items);
+    $countExpired  = count($expiredIds);
+    $countExpiring = count($expiringIds);
+    $countOk       = count(array_filter($items, fn($i) => $i['expiry_date'] && !in_array($i['id'], $expiredIds) && !in_array($i['id'], $expiringIds)));
+    ?>
     <div class="card">
+        <div class="search-bar">
+            <i class="bi bi-search search-bar-icon"></i>
+            <input type="text"
+                   class="search-input js-search-input"
+                   data-search-for="inventory-tbody"
+                   placeholder="Rechercher un produit, emplacement…">
+        </div>
+        <div class="search-filters">
+            <span class="search-filters-label">Statut&nbsp;:</span>
+            <button class="filter-btn filter-btn-all active js-status-filter" data-status="all" data-search-for="inventory-tbody">
+                Tous <span class="filter-count"><?= $countAll ?></span>
+            </button>
+            <button class="filter-btn filter-btn-danger js-status-filter" data-status="expired" data-search-for="inventory-tbody">
+                Périmés <span class="filter-count"><?= $countExpired ?></span>
+            </button>
+            <button class="filter-btn filter-btn-warning js-status-filter" data-status="expiring" data-search-for="inventory-tbody">
+                Bientôt périmés <span class="filter-count"><?= $countExpiring ?></span>
+            </button>
+            <button class="filter-btn filter-btn-success js-status-filter" data-status="ok" data-search-for="inventory-tbody">
+                OK <span class="filter-count"><?= $countOk ?></span>
+            </button>
+        </div>
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -54,11 +84,12 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
                         <?php endif; ?>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="inventory-tbody">
                     <?php foreach ($items as $item): ?>
                         <?php
                         $expiryBadge = '';
                         $expiryStatus = '';
+                        $rowStatus = 'none';
                         if ($item['expiry_date']) {
                             $today = new DateTime();
                             $expiry = new DateTime($item['expiry_date']);
@@ -66,16 +97,19 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
                             if ($expiry < $today) {
                                 $expiryStatus = 'Périmé';
                                 $expiryBadge = 'badge-danger';
+                                $rowStatus = 'expired';
                             } elseif ($diff->days <= 7) {
                                 $expiryStatus = $diff->days . 'j restants';
                                 $expiryBadge = 'badge-warning';
+                                $rowStatus = 'expiring';
                             } else {
                                 $expiryStatus = 'OK';
                                 $expiryBadge = 'badge-success';
+                                $rowStatus = 'ok';
                             }
                         }
                         ?>
-                        <tr>
+                        <tr data-status="<?= $rowStatus ?>">
                             <td><strong><?= e($item['product_name']) ?></strong></td>
                             <td><span class="badge badge-info"><?= e($item['location_name']) ?></span></td>
                             <td><strong><?= (int)$item['quantity'] ?></strong></td>
@@ -118,6 +152,7 @@ $canManage = in_array($role, ['gestionnaire_inventaires', 'gestionnaire_global',
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <p class="search-no-results" id="inventory-tbody-no-results"><i class="bi bi-search"></i> Aucune entrée ne correspond à votre recherche.</p>
         </div>
     </div>
 <?php endif; ?>

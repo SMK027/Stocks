@@ -110,4 +110,63 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(function () { toast.remove(); }, 300);
         }, 4000);
     };
+
+    /* ----- Filtrage dynamique (tables & card-grid) ----- */
+    function normalizeText(str) {
+        return str.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function applyFilters(targetId) {
+        const container = document.getElementById(targetId);
+        if (!container) return;
+
+        const searchInput = document.querySelector('.js-search-input[data-search-for="' + targetId + '"]');
+        const query = searchInput ? normalizeText(searchInput.value.trim()) : '';
+
+        const activeStatusBtn = document.querySelector('.js-status-filter.active[data-search-for="' + targetId + '"]');
+        const statusFilter = activeStatusBtn ? activeStatusBtn.dataset.status : 'all';
+
+        let visibleCount = 0;
+
+        if (container.tagName === 'TBODY') {
+            container.querySelectorAll('tr').forEach(function (row) {
+                const text = normalizeText(row.textContent);
+                const rowStatus = row.dataset.status || 'none';
+                const matchesText = !query || text.includes(query);
+                const matchesStatus = statusFilter === 'all' || rowStatus === statusFilter;
+                const show = matchesText && matchesStatus;
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+        } else {
+            container.querySelectorAll('.card-link').forEach(function (card) {
+                const text = normalizeText(card.textContent);
+                const show = !query || text.includes(query);
+                card.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+        }
+
+        const noResults = document.getElementById(targetId + '-no-results');
+        if (noResults) noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    document.querySelectorAll('.js-search-input').forEach(function (input) {
+        input.addEventListener('input', function () {
+            applyFilters(this.dataset.searchFor);
+        });
+    });
+
+    document.querySelectorAll('.js-status-filter').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const targetId = this.dataset.searchFor;
+            document.querySelectorAll('.js-status-filter[data-search-for="' + targetId + '"]').forEach(function (b) {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+            applyFilters(targetId);
+        });
+    });
 });

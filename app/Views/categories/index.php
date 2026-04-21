@@ -25,6 +25,13 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
     </div>
 <?php else: ?>
     <div class="card">
+        <div class="search-bar">
+            <i class="bi bi-search search-bar-icon"></i>
+            <input type="text"
+                   class="search-input js-search-input"
+                   data-search-for="categories-tbody"
+                   placeholder="Rechercher une catégorie…">
+        </div>
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -37,7 +44,7 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                         <?php endif; ?>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="categories-tbody">
                     <?php foreach ($categories as $cat): ?>
                         <tr>
                             <td><strong><?= e($cat['name']) ?></strong></td>
@@ -64,6 +71,7 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <p class="search-no-results" id="categories-tbody-no-results"><i class="bi bi-search"></i> Aucune catégorie ne correspond à votre recherche.</p>
         </div>
     </div>
 <?php endif; ?>

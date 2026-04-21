@@ -25,6 +25,13 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
     </div>
 <?php else: ?>
     <div class="card">
+        <div class="search-bar">
+            <i class="bi bi-search search-bar-icon"></i>
+            <input type="text"
+                   class="search-input js-search-input"
+                   data-search-for="products-tbody"
+                   placeholder="Rechercher un produit…">
+        </div>
         <div class="table-responsive">
             <table class="table">
                 <thead>
@@ -36,7 +43,7 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                         <?php endif; ?>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="products-tbody">
                     <?php foreach ($products as $p): ?>
                         <tr>
                             <td><strong><?= e($p['name']) ?></strong></td>
@@ -65,6 +72,7 @@ $canManage = in_array($role, ['gestionnaire_produits', 'gestionnaire_global', 'a
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <p class="search-no-results" id="products-tbody-no-results"><i class="bi bi-search"></i> Aucun produit ne correspond à votre recherche.</p>
         </div>
     </div>
 <?php endif; ?>
