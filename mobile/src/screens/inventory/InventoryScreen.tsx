@@ -58,6 +58,7 @@ export default function InventoryScreen({ navigation, route }: Props) {
   const [decreaseModalItem, setDecreaseModalItem] = useState<InventoryItem | null>(null);
   const [decreaseQty, setDecreaseQty] = useState('1');
   const [decreaseError, setDecreaseError] = useState<string | null>(null);
+  const [actionSheetItem, setActionSheetItem] = useState<InventoryItem | null>(null);
 
   const queries = {
     actif:    useQuery({ queryKey: ['inventory', spaceId, 'actif'],    queryFn: () => getInventory(spaceId) }),
@@ -151,52 +152,7 @@ export default function InventoryScreen({ navigation, route }: Props) {
   }, [navigation, spaceId]);
 
   const showItemActions = (item: InventoryItem) => {
-    const options: Array<{ text: string; style?: 'cancel' | 'destructive'; onPress?: () => void }> = [
-      { text: 'Annuler', style: 'cancel' },
-    ];
-
-    if (activeTab !== 'casse') {
-      options.push({
-        text: 'Diminuer la quantité',
-        onPress: () => {
-          setDecreaseQty('1');
-          setDecreaseError(null);
-          setDecreaseModalItem(item);
-        },
-      });
-      options.push({
-        text: 'Mettre en casse',
-        onPress: () => casseMutation.mutate(item.id),
-      });
-    } else {
-      options.push({
-        text: 'Remettre en service',
-        onPress: () => uncasseMutation.mutate(item.id),
-      });
-    }
-
-    options.push({
-      text: 'Modifier la DLC',
-      onPress: () => {
-        setDlcDate(item.expiry_date ?? '');
-        setDlcModalItem(item);
-      },
-    });
-    options.push({
-      text: 'Modifier',
-      onPress: () => navigation.navigate('InventoryEdit', { spaceId, itemId: item.id }),
-    });
-    options.push({
-      text: 'Supprimer',
-      style: 'destructive',
-      onPress: () =>
-        Alert.alert('Supprimer', `Supprimer ${item.product_name ?? 'cet article'} ?`, [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Supprimer', style: 'destructive', onPress: () => deleteMutation.mutate(item.id) },
-        ]),
-    });
-
-    Alert.alert(item.product_name ?? 'Article', `Qté : ${item.quantity}`, options);
+    setActionSheetItem(item);
   };
 
   const expiryBadge = (item: InventoryItem): { label: string; variant: 'danger' | 'warning' | 'neutral' } | null => {
@@ -212,7 +168,123 @@ export default function InventoryScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
-      {/* Modal diminution quantité */}
+      {/* ── Bottom-sheet menu d'actions ──────────────────────────────────── */}
+      <Modal
+        visible={actionSheetItem !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setActionSheetItem(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setActionSheetItem(null)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.actionSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.actionSheetTitle} numberOfLines={1}>
+              {actionSheetItem?.product_name ?? 'Article'}
+            </Text>
+            <Text style={styles.actionSheetSubtitle}>
+              Qté : {actionSheetItem?.quantity}
+            </Text>
+
+            {activeTab !== 'casse' ? (
+              <>
+                <TouchableOpacity
+                  style={styles.actionRow}
+                  onPress={() => {
+                    setActionSheetItem(null);
+                    setDecreaseQty('1');
+                    setDecreaseError(null);
+                    setDecreaseModalItem(actionSheetItem);
+                  }}
+                >
+                  <Ionicons name="remove-circle-outline" size={22} color={colors.text} />
+                  <Text style={styles.actionLabel}>Diminuer la quantité</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionRow}
+                  onPress={() => {
+                    setActionSheetItem(null);
+                    actionSheetItem && casseMutation.mutate(actionSheetItem.id);
+                  }}
+                >
+                  <Ionicons name="construct-outline" size={22} color={colors.text} />
+                  <Text style={styles.actionLabel}>Mettre en casse</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={() => {
+                  setActionSheetItem(null);
+                  actionSheetItem && uncasseMutation.mutate(actionSheetItem.id);
+                }}
+              >
+                <Ionicons name="refresh-outline" size={22} color={colors.text} />
+                <Text style={styles.actionLabel}>Remettre en service</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => {
+                setActionSheetItem(null);
+                if (actionSheetItem) {
+                  setDlcDate(actionSheetItem.expiry_date ?? '');
+                  setDlcModalItem(actionSheetItem);
+                }
+              }}
+            >
+              <Ionicons name="time-outline" size={22} color={colors.text} />
+              <Text style={styles.actionLabel}>Modifier la DLC</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => {
+                setActionSheetItem(null);
+                actionSheetItem && navigation.navigate('InventoryEdit', { spaceId, itemId: actionSheetItem.id });
+              }}
+            >
+              <Ionicons name="pencil-outline" size={22} color={colors.text} />
+              <Text style={styles.actionLabel}>Modifier</Text>
+            </TouchableOpacity>
+
+            <View style={styles.actionSeparator} />
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => {
+                setActionSheetItem(null);
+                if (actionSheetItem) {
+                  Alert.alert(
+                    'Supprimer',
+                    `Supprimer ${actionSheetItem.product_name ?? 'cet article'} ?`,
+                    [
+                      { text: 'Annuler', style: 'cancel' },
+                      { text: 'Supprimer', style: 'destructive', onPress: () => deleteMutation.mutate(actionSheetItem.id) },
+                    ],
+                  );
+                }
+              }}
+            >
+              <Ionicons name="trash-outline" size={22} color={colors.danger} />
+              <Text style={[styles.actionLabel, { color: colors.danger }]}>Supprimer</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionRow, styles.actionCancel]}
+              onPress={() => setActionSheetItem(null)}
+            >
+              <Text style={styles.actionCancelLabel}>Annuler</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* ── Modal diminution quantité ────────────────────────────────────── */}
       <Modal
         visible={decreaseModalItem !== null}
         transparent
@@ -580,6 +652,54 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.danger ?? '#ef4444',
     textAlign: 'center',
+  },
+
+  // ── Action sheet ──────────────────────────────────────────────────────────
+  actionSheet: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    gap: 2,
+  },
+  actionSheetTitle: {
+    ...typography.h3,
+    color: colors.text,
+    paddingVertical: spacing.xs,
+  },
+  actionSheetSubtitle: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  actionLabel: {
+    ...typography.body,
+    color: colors.text,
+  },
+  actionSeparator: {
+    height: spacing.sm,
+  },
+  actionCancel: {
+    justifyContent: 'center',
+    borderBottomWidth: 0,
+    marginTop: spacing.xs,
+  },
+  actionCancelLabel: {
+    ...typography.body,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    textAlign: 'center',
+    flex: 1,
   },
 
   card: {
