@@ -49,8 +49,8 @@ export default function ProductFormScreen({ navigation, route }: Props) {
     if (productData) {
       setName(productData.name);
       setDescription(productData.description ?? '');
-      if (productData.categories) {
-        setSelectedCategoryIds(productData.categories.map((c) => c.id));
+      if (productData.category_ids) {
+        setSelectedCategoryIds(productData.category_ids);
       }
     }
   }, [productData]);
