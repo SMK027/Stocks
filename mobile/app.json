@@ -36,6 +36,13 @@
       "expo-system-ui",
       "expo-navigation-bar",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "expo-navigation-bar": {},
+      "eas": {
+        "projectId": "16952150-408a-443d-b5b1-6eae06e3257e"
+      }
+    },
+    "owner": "smk_9119"
   }
 }
