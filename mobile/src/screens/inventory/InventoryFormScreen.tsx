@@ -100,12 +100,13 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
       toastError(err?.response?.data?.message ?? 'Une erreur est survenue.'),
   });
 
-  // Réinitialise le flag "manuel" quand l'utilisateur change de produit (mode création)
-  useEffect(() => {
+  // Réinitialise le flag "manuel" et déclenche le recalcul de DLC lors d'un changement de produit
+  const handleProductChange = (id: number) => {
     if (!isEdit) {
       setIsExpiryManual(false);
     }
-  }, [productId, isEdit]);
+    setProductId(id);
+  };
 
   // Suggestion automatique de DLC selon la catégorie du produit
   useEffect(() => {
@@ -167,7 +168,7 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
             label="Produit *"
             items={products}
             value={productId}
-            onChange={setProductId}
+            onChange={handleProductChange}
             placeholder="Rechercher un produit…"
             icon="barcode-outline"
             emptyMessage="Aucun produit – créez-en d'abord dans cet espace."
