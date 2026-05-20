@@ -15,12 +15,15 @@ class Product extends Model
      */
     public function findBySpace(int $spaceId): array
     {
-        $groupConcat = $this->isSQLite()
+        $groupConcatNames = $this->isSQLite()
             ? "GROUP_CONCAT(c.name, ', ')"
             : "GROUP_CONCAT(c.name SEPARATOR ', ')";
+        $groupConcatIds = $this->isSQLite()
+            ? "GROUP_CONCAT(c.id, ',')"
+            : "GROUP_CONCAT(c.id SEPARATOR ',')";
 
         $stmt = $this->db->prepare(
-            "SELECT p.*, {$groupConcat} as category_names
+            "SELECT p.*, {$groupConcatNames} as category_names, {$groupConcatIds} as _cat_ids
              FROM products p
              LEFT JOIN product_categories pc ON pc.product_id = p.id
              LEFT JOIN categories c ON c.id = pc.category_id
@@ -29,7 +32,14 @@ class Product extends Model
              ORDER BY p.name ASC"
         );
         $stmt->execute(['space_id' => $spaceId]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows as &$row) {
+            $row['category_ids'] = $row['_cat_ids']
+                ? array_map('intval', explode(',', (string) $row['_cat_ids']))
+                : [];
+            unset($row['_cat_ids']);
+        }
+        return $rows;
     }
 
     /**

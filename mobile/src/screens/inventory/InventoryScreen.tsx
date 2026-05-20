@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Modal,
   RefreshControl,
   ScrollView,
   TextInput,
@@ -25,12 +26,15 @@ import {
   decreaseInventoryItem,
   markAsCasse,
   unmarkCasse,
+  updateInventoryItem,
 } from '../../api/inventory';
 import { colors, spacing, typography, borderRadius, shadows } from '../../theme';
 import LoadingView from '../../components/LoadingView';
 import ErrorView from '../../components/ErrorView';
 import EmptyState from '../../components/EmptyState';
 import Badge from '../../components/Badge';
+import DatePickerField from '../../components/DatePickerField';
+import Button from '../../components/Button';
 
 type Props = NativeStackScreenProps<SpacesStackParamList, 'Inventory'>;
 
@@ -49,6 +53,11 @@ export default function InventoryScreen({ navigation, route }: Props) {
   const { error: toastError } = useToast();
   const [activeTab, setActiveTab] = useState<Tab>('actif');
   const [search, setSearch] = useState('');
+  const [dlcModalItem, setDlcModalItem] = useState<InventoryItem | null>(null);
+  const [dlcDate, setDlcDate] = useState('');
+  const [decreaseModalItem, setDecreaseModalItem] = useState<InventoryItem | null>(null);
+  const [decreaseQty, setDecreaseQty] = useState('1');
+  const [decreaseError, setDecreaseError] = useState<string | null>(null);
 
   const queries = {
     actif:    useQuery({ queryKey: ['inventory', spaceId, 'actif'],    queryFn: () => getInventory(spaceId) }),
@@ -81,11 +90,30 @@ export default function InventoryScreen({ navigation, route }: Props) {
   });
 
   const decreaseMutation = useMutation({
-    mutationFn: (id: number) => decreaseInventoryItem(spaceId, id, 1),
-    onSuccess: invalidate,
+    mutationFn: ({ id, qty }: { id: number; qty: number }) =>
+      decreaseInventoryItem(spaceId, id, qty),
+    onSuccess: () => {
+      invalidate();
+      setDecreaseModalItem(null);
+    },
     onError: (err: any) =>
       toastError(err?.response?.data?.message ?? 'Impossible de diminuer.'),
   });
+
+  const handleDecreaseSubmit = () => {
+    if (!decreaseModalItem) return;
+    const qty = parseInt(decreaseQty, 10);
+    if (isNaN(qty) || qty <= 0) {
+      setDecreaseError('La quantité doit être un nombre positif.');
+      return;
+    }
+    if (qty > decreaseModalItem.quantity) {
+      setDecreaseError(`La quantité dépasse le stock disponible (${decreaseModalItem.quantity}).`);
+      return;
+    }
+    setDecreaseError(null);
+    decreaseMutation.mutate({ id: decreaseModalItem.id, qty });
+  };
 
   const casseMutation = useMutation({
     mutationFn: (id: number) => markAsCasse(spaceId, id),
@@ -95,6 +123,17 @@ export default function InventoryScreen({ navigation, route }: Props) {
   const uncasseMutation = useMutation({
     mutationFn: (id: number) => unmarkCasse(spaceId, id),
     onSuccess: invalidate,
+  });
+
+  const dlcMutation = useMutation({
+    mutationFn: ({ id, expiry_date }: { id: number; expiry_date: string | null }) =>
+      updateInventoryItem(spaceId, id, { expiry_date }),
+    onSuccess: () => {
+      invalidate();
+      setDlcModalItem(null);
+    },
+    onError: (err: any) =>
+      toastError(err?.response?.data?.message ?? 'Impossible de modifier la DLC.'),
   });
 
   useLayoutEffect(() => {
@@ -118,12 +157,12 @@ export default function InventoryScreen({ navigation, route }: Props) {
 
     if (activeTab !== 'casse') {
       options.push({
-        text: '−1 (diminuer)',
-        onPress: () =>
-          Alert.alert('Diminuer', 'Retirer 1 unité ?', [
-            { text: 'Annuler', style: 'cancel' },
-            { text: 'Confirmer', onPress: () => decreaseMutation.mutate(item.id) },
-          ]),
+        text: 'Diminuer la quantité',
+        onPress: () => {
+          setDecreaseQty('1');
+          setDecreaseError(null);
+          setDecreaseModalItem(item);
+        },
       });
       options.push({
         text: 'Mettre en casse',
@@ -136,6 +175,13 @@ export default function InventoryScreen({ navigation, route }: Props) {
       });
     }
 
+    options.push({
+      text: 'Modifier la DLC',
+      onPress: () => {
+        setDlcDate(item.expiry_date ?? '');
+        setDlcModalItem(item);
+      },
+    });
     options.push({
       text: 'Modifier',
       onPress: () => navigation.navigate('InventoryEdit', { spaceId, itemId: item.id }),
@@ -166,6 +212,123 @@ export default function InventoryScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
+      {/* Modal diminution quantité */}
+      <Modal
+        visible={decreaseModalItem !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDecreaseModalItem(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setDecreaseModalItem(null)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle} numberOfLines={1}>
+              {decreaseModalItem?.product_name ?? 'Article'}
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              Stock actuel : {decreaseModalItem?.quantity} unité{(decreaseModalItem?.quantity ?? 0) > 1 ? 's' : ''}
+            </Text>
+            <View style={styles.decreaseInputRow}>
+              <TouchableOpacity
+                style={styles.decreaseStepBtn}
+                onPress={() => {
+                  const v = Math.max(1, parseInt(decreaseQty || '1', 10) - 1);
+                  setDecreaseQty(String(v));
+                  setDecreaseError(null);
+                }}
+              >
+                <Ionicons name="remove" size={20} color={colors.primary} />
+              </TouchableOpacity>
+              <TextInput
+                style={styles.decreaseInput}
+                value={decreaseQty}
+                onChangeText={(t) => { setDecreaseQty(t); setDecreaseError(null); }}
+                keyboardType="numeric"
+                selectTextOnFocus
+                maxLength={6}
+              />
+              <TouchableOpacity
+                style={styles.decreaseStepBtn}
+                onPress={() => {
+                  const v = parseInt(decreaseQty || '0', 10) + 1;
+                  setDecreaseQty(String(v));
+                  setDecreaseError(null);
+                }}
+              >
+                <Ionicons name="add" size={20} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+            {decreaseError && (
+              <Text style={styles.decreaseErrorText}>{decreaseError}</Text>
+            )}
+            <View style={styles.modalActions}>
+              <Button
+                title="Annuler"
+                onPress={() => setDecreaseModalItem(null)}
+                variant="outline"
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="Confirmer"
+                onPress={handleDecreaseSubmit}
+                loading={decreaseMutation.isPending}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal modification DLC */}
+      <Modal
+        visible={dlcModalItem !== null}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setDlcModalItem(null)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setDlcModalItem(null)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle} numberOfLines={1}>
+              {dlcModalItem?.product_name ?? 'Article'}
+            </Text>
+            <Text style={styles.modalSubtitle}>Modifier la date limite de consommation</Text>
+            <DatePickerField
+              label="DLC"
+              value={dlcDate}
+              onChange={setDlcDate}
+              placeholder="Aucune date (optionnel)"
+              optional
+              icon="time-outline"
+            />
+            <View style={styles.modalActions}>
+              <Button
+                title="Annuler"
+                onPress={() => setDlcModalItem(null)}
+                variant="outline"
+                style={{ flex: 1 }}
+              />
+              <Button
+                title="Enregistrer"
+                onPress={() =>
+                  dlcModalItem &&
+                  dlcMutation.mutate({ id: dlcModalItem.id, expiry_date: dlcDate || null })
+                }
+                loading={dlcMutation.isPending}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
       {/* Onglets */}
       <View style={styles.tabBar}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabContent}>
@@ -351,6 +514,73 @@ const styles = StyleSheet.create({
 
   list: { padding: spacing.md, gap: spacing.sm },
   listFlex: { flex: 1 },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: spacing.lg,
+    gap: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.sm,
+  },
+  modalTitle: {
+    ...typography.h2,
+    color: colors.text,
+  },
+  modalSubtitle: {
+    ...typography.body,
+    color: colors.textSecondary,
+    marginTop: -spacing.sm,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.xs,
+  },
+  decreaseInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+  },
+  decreaseStepBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  decreaseInput: {
+    width: 80,
+    height: 44,
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    textAlign: 'center',
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  decreaseErrorText: {
+    fontSize: 13,
+    color: colors.danger ?? '#ef4444',
+    textAlign: 'center',
+  },
 
   card: {
     flexDirection: 'row',

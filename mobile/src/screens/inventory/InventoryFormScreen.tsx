@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
+  Text,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useToast } from '../../components/Toast';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -14,6 +16,7 @@ import { SpacesStackParamList } from '../../types';
 import { upsertInventoryItem, updateInventoryItem, getInventoryItem } from '../../api/inventory';
 import { getProducts } from '../../api/products';
 import { getLocations } from '../../api/locations';
+import { getCategories } from '../../api/categories';
 import { colors, spacing } from '../../theme';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
@@ -35,6 +38,8 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
   const [quantity, setQuantity] = useState('1');
   const [stockDate, setStockDate] = useState(new Date().toISOString().split('T')[0]);
   const [expiryDate, setExpiryDate] = useState('');
+  const [isExpiryManual, setIsExpiryManual] = useState(false);
+  const [dlcHint, setDlcHint] = useState<string | null>(null);
 
   const { data: products = [] } = useQuery({
     queryKey: ['products', spaceId],
@@ -44,6 +49,11 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
   const { data: locations = [] } = useQuery({
     queryKey: ['locations', spaceId],
     queryFn: () => getLocations(spaceId),
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories', spaceId],
+    queryFn: () => getCategories(spaceId),
   });
 
   const { data: itemData, isLoading } = useQuery({
@@ -88,6 +98,51 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
     onError: (err: any) =>
       toastError(err?.response?.data?.message ?? 'Une erreur est survenue.'),
   });
+
+  // Réinitialise le flag "manuel" quand l'utilisateur change de produit (mode création)
+  useEffect(() => {
+    if (!isEdit) {
+      setIsExpiryManual(false);
+    }
+  }, [productId, isEdit]);
+
+  // Suggestion automatique de DLC selon la catégorie du produit
+  useEffect(() => {
+    if (isEdit || isExpiryManual || !productId || !stockDate) {
+      if (!productId) setDlcHint(null);
+      return;
+    }
+    const product = products.find((p) => p.id === productId);
+    if (!product?.category_ids?.length) {
+      setDlcHint(null);
+      return;
+    }
+    let minDays: number | null = null;
+    for (const catId of product.category_ids) {
+      const cat = categories.find((c) => c.id === catId);
+      if (cat?.max_consumption_days && cat.max_consumption_days > 0) {
+        if (minDays === null || cat.max_consumption_days < minDays) {
+          minDays = cat.max_consumption_days;
+        }
+      }
+    }
+    if (minDays !== null) {
+      const [y, m, d] = stockDate.split('-').map(Number);
+      const suggested = new Date(y, m - 1, d);
+      suggested.setDate(suggested.getDate() + minDays);
+      const iso = `${suggested.getFullYear()}-${String(suggested.getMonth() + 1).padStart(2, '0')}-${String(suggested.getDate()).padStart(2, '0')}`;
+      setExpiryDate(iso);
+      setDlcHint(`Suggestion : ${minDays} jour${minDays > 1 ? 's' : ''} après la mise en stock`);
+    } else {
+      setDlcHint(null);
+    }
+  }, [productId, stockDate, products, categories, isEdit, isExpiryManual]);
+
+  const handleExpiryChange = (val: string) => {
+    setExpiryDate(val);
+    setIsExpiryManual(true);
+    setDlcHint(null);
+  };
 
   const handleSubmit = () => {
     if (!productId) { toastWarning('Sélectionnez un produit.'); return; }
@@ -147,11 +202,17 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
           <DatePickerField
             label="Date limite de consommation"
             value={expiryDate}
-            onChange={setExpiryDate}
+            onChange={handleExpiryChange}
             placeholder="Sélectionner (optionnel)"
             optional
             icon="time-outline"
           />
+          {dlcHint && (
+            <View style={styles.hintRow}>
+              <Ionicons name="information-circle-outline" size={14} color={colors.primary} />
+              <Text style={styles.hintText}>{dlcHint}</Text>
+            </View>
+          )}
 
           <Button
             title={isEdit ? 'Enregistrer' : 'Ajouter au stock'}
@@ -169,4 +230,16 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, gap: spacing.md },
+  hintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: -spacing.sm + 2,
+  },
+  hintText: {
+    fontSize: 12,
+    color: colors.primary,
+    fontStyle: 'italic',
+    flexShrink: 1,
+  },
 });
