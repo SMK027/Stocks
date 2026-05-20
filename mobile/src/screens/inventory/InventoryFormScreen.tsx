@@ -14,7 +14,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SpacesStackParamList } from '../../types';
 import { upsertInventoryItem, updateInventoryItem, getInventoryItem } from '../../api/inventory';
-import { getProducts } from '../../api/products';
+import { getProducts, getProduct } from '../../api/products';
 import { getLocations } from '../../api/locations';
 import { getCategories } from '../../api/categories';
 import { colors, spacing } from '../../theme';
@@ -55,6 +55,13 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories', spaceId],
     queryFn: () => getCategories(spaceId),
+  });
+
+  // Chargement du produit sélectionné (mode création uniquement) pour obtenir ses category_ids
+  const { data: selectedProductData } = useQuery({
+    queryKey: ['product', spaceId, productId],
+    queryFn: () => getProduct(spaceId, productId!),
+    enabled: !isEdit && productId !== null,
   });
 
   const { data: itemData, isLoading } = useQuery({
@@ -108,19 +115,19 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
     setProductId(id);
   };
 
-  // Suggestion automatique de DLC selon la catégorie du produit
+  // Suggestion automatique de DLC selon les catégories du produit sélectionné
   useEffect(() => {
     if (isEdit || isExpiryManual || !productId || !stockDate) {
       if (!productId) setDlcHint(null);
       return;
     }
-    const product = products.find((p) => p.id === productId);
-    if (!product?.category_ids?.length) {
+    const catIds = selectedProductData?.category_ids;
+    if (!catIds?.length) {
       setDlcHint(null);
       return;
     }
     let minDays: number | null = null;
-    for (const catId of product.category_ids) {
+    for (const catId of catIds) {
       const cat = categories.find((c) => c.id === catId);
       if (cat?.max_consumption_days && cat.max_consumption_days > 0) {
         if (minDays === null || cat.max_consumption_days < minDays) {
@@ -138,7 +145,7 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
     } else {
       setDlcHint(null);
     }
-  }, [productId, stockDate, products, categories, isEdit, isExpiryManual]);
+  }, [productId, stockDate, selectedProductData, categories, isEdit, isExpiryManual]);
 
   const handleExpiryChange = (val: string) => {
     setExpiryDate(val);
