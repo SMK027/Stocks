@@ -66,13 +66,6 @@ export default function DashboardScreen() {
             color={colors.primary}
             bg={colors.primaryLight}
           />
-          <StatTile
-            icon="shield-checkmark"
-            label="Admin"
-            value={adminSpaces}
-            color={colors.secondary}
-            bg={colors.secondaryLight}
-          />
         </View>
 
         {/* Liste des espaces */}
