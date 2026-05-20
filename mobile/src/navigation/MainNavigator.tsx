@@ -20,6 +20,7 @@ import ProductListScreen from '../screens/products/ProductListScreen';
 import ProductFormScreen from '../screens/products/ProductFormScreen';
 import InventoryScreen from '../screens/inventory/InventoryScreen';
 import InventoryFormScreen from '../screens/inventory/InventoryFormScreen';
+import LocationInventoryScreen from '../screens/inventory/LocationInventoryScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const SpacesStack = createNativeStackNavigator<SpacesStackParamList>();
@@ -117,6 +118,11 @@ function SpacesNavigator() {
         name="InventoryEdit"
         component={InventoryFormScreen}
         options={{ title: 'Modifier le stock' }}
+      />
+      <SpacesStack.Screen
+        name="LocationInventory"
+        component={LocationInventoryScreen}
+        options={({ route }) => ({ title: route.params.locationName })}
       />
     </SpacesStack.Navigator>
   );

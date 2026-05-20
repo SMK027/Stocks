@@ -23,6 +23,7 @@ interface Props {
   placeholder?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   emptyMessage?: string;
+  disabled?: boolean;
 }
 
 const MAX_VISIBLE = 5;
@@ -36,6 +37,7 @@ export default function AutocompleteField({
   placeholder = 'Rechercher…',
   icon = 'search-outline',
   emptyMessage = 'Aucun résultat',
+  disabled = false,
 }: Props) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -77,14 +79,14 @@ export default function AutocompleteField({
       <Text style={styles.label}>{label}</Text>
 
       {/* ── Champ de saisie ─────────────────────────────────────────────── */}
-      <View style={[styles.inputWrap, open && styles.inputWrapOpen]}>
+      <View style={[styles.inputWrap, open && styles.inputWrapOpen, disabled && styles.inputWrapDisabled]}>
         <Ionicons
           name={open ? 'search-outline' : icon}
           size={18}
           color={open ? colors.primary : colors.textSecondary}
         />
 
-        {open ? (
+        {open && !disabled ? (
           /* Mode recherche */
           <TextInput
             ref={inputRef}
@@ -101,14 +103,14 @@ export default function AutocompleteField({
           />
         ) : (
           /* Mode affichage de la valeur sélectionnée */
-          <TouchableOpacity style={styles.inputTouchable} onPress={handleFocus} activeOpacity={0.75}>
+          <TouchableOpacity style={styles.inputTouchable} onPress={disabled ? undefined : handleFocus} activeOpacity={disabled ? 1 : 0.75}>
             <Text style={[styles.input, !selected && styles.placeholder]} numberOfLines={1}>
               {selected ? selected.name : placeholder}
             </Text>
           </TouchableOpacity>
         )}
 
-        {selected && !open ? (
+        {selected && !open && !disabled ? (
           <TouchableOpacity onPress={handleClear} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Ionicons name="close-circle" size={18} color={colors.textMuted} />
           </TouchableOpacity>
@@ -180,6 +182,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     height: 50,
     gap: spacing.sm,
+  },
+  inputWrapDisabled: {
+    backgroundColor: colors.background,
+    borderColor: colors.border,
   },
   inputWrapOpen: {
     borderColor: colors.primary,

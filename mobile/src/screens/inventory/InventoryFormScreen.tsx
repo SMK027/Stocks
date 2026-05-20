@@ -27,14 +27,15 @@ import AutocompleteField from '../../components/AutocompleteField';
 type Props = NativeStackScreenProps<SpacesStackParamList, 'InventoryCreate' | 'InventoryEdit'>;
 
 export default function InventoryFormScreen({ navigation, route }: Props) {
-  const { spaceId } = route.params as { spaceId: number; itemId?: number };
+  const { spaceId } = route.params as { spaceId: number; itemId?: number; initialLocationId?: number };
   const itemId = (route.params as { itemId?: number }).itemId;
+  const initialLocationId = (route.params as { initialLocationId?: number }).initialLocationId ?? null;
   const isEdit = itemId !== undefined;
   const qc = useQueryClient();
   const { error: toastError, warning: toastWarning } = useToast();
 
   const [productId, setProductId] = useState<number | null>(null);
-  const [locationId, setLocationId] = useState<number | null>(null);
+  const [locationId, setLocationId] = useState<number | null>(initialLocationId);
   const [quantity, setQuantity] = useState('1');
   const [stockDate, setStockDate] = useState(new Date().toISOString().split('T')[0]);
   const [expiryDate, setExpiryDate] = useState('');
@@ -180,6 +181,7 @@ export default function InventoryFormScreen({ navigation, route }: Props) {
             placeholder="Rechercher un emplacement…"
             icon="location-outline"
             emptyMessage="Aucun emplacement – créez-en d'abord dans cet espace."
+            disabled={initialLocationId !== null && !isEdit}
           />
 
           <Input

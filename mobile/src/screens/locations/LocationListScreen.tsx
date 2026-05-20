@@ -108,7 +108,17 @@ export default function LocationListScreen({ navigation, route }: Props) {
           />
         }
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() =>
+              navigation.navigate('LocationInventory', {
+                spaceId,
+                locationId: item.id,
+                locationName: item.name,
+              })
+            }
+            activeOpacity={0.75}
+          >
             <View style={styles.iconBg}>
               <Ionicons name="location" size={20} color={colors.info} />
             </View>
@@ -132,7 +142,7 @@ export default function LocationListScreen({ navigation, route }: Props) {
                 <Ionicons name="trash-outline" size={20} color={colors.danger} />
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </SafeAreaView>

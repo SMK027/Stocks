@@ -108,6 +108,7 @@ export type SpacesStackParamList = {
   ProductCreate: { spaceId: number };
   ProductEdit: { spaceId: number; productId: number };
   Inventory: { spaceId: number; spaceName: string };
-  InventoryCreate: { spaceId: number };
+  InventoryCreate: { spaceId: number; initialLocationId?: number };
   InventoryEdit: { spaceId: number; itemId: number };
+  LocationInventory: { spaceId: number; locationId: number; locationName: string };
 };
